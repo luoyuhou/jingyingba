@@ -1,0 +1,57 @@
+<navigation-bar title="分类管理" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="mgr-container">
+  <!-- 左侧分类列表 -->
+  <scroll-view class="sidebar" scroll-y>
+    <view 
+      wx:for="{{categories}}" 
+      wx:key="id" 
+      class="cat-item {{activeId === item.id ? 'active' : ''}}"
+      bindtap="selectCategory"
+      data-id="{{item.id}}"
+    >
+      {{item.name}}
+    </view>
+    <view class="add-btn-item" bindtap="toggleAdd">
+      <text>+</text>
+    </view>
+  </scroll-view>
+
+  <!-- 右侧管理区域 -->
+  <view class="main-content">
+    <block wx:if="{{activeId}}">
+      <view class="detail-card">
+        <text class="title">分类操作</text>
+        <view class="action-item">
+          <text>当前选中: {{categories[utils.findIndex(categories, activeId)].name}}</text>
+        </view>
+        <view class="btns">
+          <button size="mini" type="warn" bindtap="deleteCategory" data-id="{{activeId}}">删除该分类</button>
+        </view>
+      </view>
+    </block>
+    <view class="empty-tip" wx:else>
+      暂无分类，点击左侧 “+” 添加
+    </view>
+  </view>
+
+  <!-- 添加弹窗 -->
+  <view class="modal" wx:if="{{showAdd}}">
+    <view class="modal-content">
+      <text class="modal-title">添加分类</text>
+      <input class="input" placeholder="输入分类名称" bindinput="onInput" value="{{newName}}" focus />
+      <view class="modal-btns">
+        <button size="mini" bindtap="toggleAdd">取消</button>
+        <button size="mini" type="primary" bindtap="addCategory">保存</button>
+      </view>
+    </view>
+  </view>
+</view>
+
+<wxs module="utils">
+module.exports.findIndex = function(list, id) {
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].id === id) return i;
+  }
+  return -1;
+}
+</wxs>

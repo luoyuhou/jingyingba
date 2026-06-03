@@ -1,0 +1,56 @@
+<navigation-bar title="{{id ? '编辑商品' : '添加商品'}}" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="edit-container">
+  <!-- 左侧：分类参考与多选 -->
+  <scroll-view class="sidebar" scroll-y>
+    <view class="sidebar-title">所属分类</view>
+    <view 
+      wx:for="{{categories}}" 
+      wx:key="id" 
+      class="cat-item {{utils.includes(selectedCategoryIds, item.id) ? 'active' : ''}}"
+      bindtap="toggleCategory"
+      data-id="{{item.id}}"
+    >
+      <view class="checkbox {{utils.includes(selectedCategoryIds, item.id) ? 'checked' : ''}}"></view>
+      <text>{{item.name}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 右侧：基本信息表单 -->
+  <scroll-view class="main-form" scroll-y>
+    <view class="form-card">
+      <view class="form-item">
+        <text class="label">商品名称</text>
+        <input class="input" placeholder="请输入商品名称" value="{{name}}" bindinput="onInput" data-field="name" />
+      </view>
+      <view class="form-item">
+        <text class="label">商品价格 (元)</text>
+        <input class="input" type="digit" placeholder="0.00" value="{{price}}" bindinput="onInput" data-field="price" />
+      </view>
+      <view class="form-item">
+        <text class="label">计费方式</text>
+        <radio-group class="radio-group" bindchange="onInput" data-field="billingMode" style="display: flex; gap: 40rpx; margin-top: 10rpx;">
+          <label class="radio-label" style="display: flex; align-items: center; font-size: 28rpx;">
+            <radio value="piece" checked="{{billingMode !== 'weight'}}" /> 按件
+          </label>
+          <label class="radio-label" style="display: flex; align-items: center; font-size: 28rpx;">
+            <radio value="weight" checked="{{billingMode === 'weight'}}" /> 称重 (500g)
+          </label>
+        </radio-group>
+      </view>
+    </view>
+
+    <view class="tip-box">
+      <text>提示：在左侧勾选该商品所属的分类，支持多选。</text>
+    </view>
+
+    <view class="footer">
+      <button type="primary" bindtap="save">保存商品信息</button>
+    </view>
+  </scroll-view>
+</view>
+
+<wxs module="utils">
+module.exports.includes = function(arr, val) {
+  return arr.indexOf(val) !== -1;
+}
+</wxs>

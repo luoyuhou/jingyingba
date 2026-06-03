@@ -1,0 +1,182 @@
+<navigation-bar title="收银台" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<wxs module="priceUtils">
+  module.exports.toFixed = function(val) {
+    if (!val) return '0.00';
+    return parseFloat(val).toFixed(2);
+  }
+  module.exports.formatQty = function(item) {
+    if (!item) return '';
+    if (item.billingMode === 'weight') {
+      return item.quantity + 'g';
+    }
+    return 'x' + item.quantity;
+  }
+  module.exports.getSubtotal = function(item) {
+    if (!item) return '0.00';
+    var price = parseFloat(item.price) || 0;
+    var qty = parseFloat(item.quantity) || 0;
+    if (item.billingMode === 'weight') {
+      return (price * qty / 500).toFixed(2);
+    }
+    return (price * qty).toFixed(2);
+  }
+</wxs>
+<view class="cashier-container">
+  <!-- 左侧分类 -->
+  <scroll-view class="sidebar" scroll-y>
+    <view 
+      wx:for="{{categories}}" 
+      wx:key="id" 
+      class="cat-item {{activeCategoryId === item.id ? 'active' : ''}}"
+      bindtap="selectCategory"
+      data-id="{{item.id}}"
+    >
+      {{item.name}}
+    </view>
+    <!-- 分类栏底部增加管理入口 -->
+    <view class="sidebar-footer">
+      <view class="sidebar-btn" bindtap="toggleOrderHistory">
+        <icon type="search" size="18" color="#666"></icon>
+        <text>查订单</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 右侧商品 -->
+  <view class="main-wrapper">
+    <!-- 商品搜索栏 -->
+    <view class="search-section">
+      <view class="search-bar">
+        <icon type="search" size="14"></icon>
+        <input class="search-input" placeholder="搜索商品名称" bindinput="onSearchInput" value="{{searchKeyword}}" />
+      </view>
+    </view>
+
+    <scroll-view class="main" scroll-y>
+      <view class="product-grid">
+        <view class="product-item" wx:for="{{filteredProducts}}" wx:key="id" bindtap="addToCart" data-product="{{item}}">
+          <text class="p-name">{{item.name}}</text>
+          <text class="p-price">￥{{item.price}}<text style="font-size: 20rpx; font-weight: normal; color: #999;">{{item.billingMode === 'weight' ? '/500g' : ''}}</text></text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 历史订单弹窗 -->
+  <view class="history-mask" wx:if="{{showOrderHistory}}" bindtap="toggleOrderHistory"></view>
+  <view class="history-popup {{showOrderHistory ? 'show' : ''}}">
+    <view class="history-header">
+      <text>最近成交记录</text>
+      <icon type="cancel" size="24" color="#ccc" bindtap="toggleOrderHistory"></icon>
+    </view>
+    <scroll-view scroll-y class="history-scroll">
+      <view class="history-item" wx:for="{{historyOrders}}" wx:key="id">
+        <view class="h-order-body">
+          <view style="display: flex; justify-content: space-between; align-items: center;">
+                <view class="h-customer">{{item.memberName}} ({{item.memberPhone || '散客'}})</view>
+                <text class="h-method">{{item.paymentMethod === 'balance' ? '余额' : '现场'}}支付</text>
+          </view>
+          <view class="h-items">
+            <view class="h-prod" wx:for="{{item.items}}" wx:for-item="prod" wx:key="id">
+              <text>{{prod.name}} {{priceUtils.formatQty(prod)}}</text>
+              <text>￥{{priceUtils.getSubtotal(prod)}}</text>
+            </view>
+          </view>
+          <view style="display: flex; justify-content: space-between; align-items: center;">
+            <text class="h-time">{{item.createdAt}}</text>
+            <view class="h-total">实收: <text class="h-price">￥{{priceUtils.toFixed(item.payableAmount || item.totalAmount)}}</text></view>
+          </view>
+        </view>
+      </view>
+      <view class="empty-tip" wx:if="{{historyOrders.length === 0}}">暂无成交订单</view>
+    </scroll-view>
+  </view>
+
+  <!-- 称重弹窗 -->
+  <view class="modal" wx:if="{{showWeightModal}}">
+    <view class="modal-content">
+      <text class="modal-title">商品称重 - {{tempProduct.name}}</text>
+      <view class="weight-info">
+        单价: <text class="highlight">￥{{tempProduct.price}} / 500g</text>
+      </view>
+      <view class="weight-input-box" style="display: flex; align-items: center; margin: 30rpx 0; background: #f5f5f5; padding: 20rpx; border-radius: 8rpx;">
+        <input class="input weight-input" style="flex: 1; font-size: 36rpx; font-weight: bold;" type="digit" placeholder="输入重量 (克/g)" bindinput="onWeightInput" value="{{inputWeight}}" focus />
+        <text class="unit-label" style="margin-left: 20rpx; color: #666;">克(g)</text>
+      </view>
+      <view class="weight-hint" style="font-size: 24rpx; color: #999; margin-bottom: 30rpx;">提示：输入克重，如 1斤请输入 500</view>
+      <view class="modal-btns">
+        <button class="btn-cancel" bindtap="closeWeightModal">取消</button>
+        <button class="btn-confirm" type="primary" bindtap="confirmWeight">确认加入</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 购物车详情弹窗 -->
+  <view class="cart-detail-mask" wx:if="{{showCartDetail}}" bindtap="toggleCart"></view>
+  <view class="cart-detail-popup {{showCartDetail ? 'show' : ''}}">
+    <view class="cart-header">
+      <text>购物清单</text>
+      <text class="clear-cart" bindtap="clearCart">清空</text>
+    </view>
+    <scroll-view scroll-y class="cart-scroll">
+      <view class="cart-item-row" wx:for="{{cart}}" wx:key="id">
+        <movable-area class="movable-area">
+          <movable-view class="movable-view" direction="horizontal" x="{{item.x}}" bindchange="onSlideChange" data-id="{{item.id}}">
+            <view class="item-content">
+              <view class="item-info">
+                <view class="name">{{item.name}}</view>
+                <view class="price-line">
+                  <text class="unit-price">￥{{item.price}}<text style="font-size: 20rpx;">/{{item.billingMode === 'weight' ? '500g' : '件'}}</text></text>
+                  <text class="item-total" style="margin-left: 20rpx; color: #ff4400; font-weight: bold;">小计: ￥{{priceUtils.getSubtotal(item)}}</text>
+                </view>
+              </view>
+              <view class="qty-control">
+                <text class="qty-btn minus" catchtap="updateQuantity" data-id="{{item.id}}" data-delta="{{item.billingMode === 'weight' ? -50 : -1}}">-</text>
+                <text class="qty-num">{{priceUtils.formatQty(item)}}</text>
+                <text class="qty-btn plus" catchtap="updateQuantity" data-id="{{item.id}}" data-delta="{{item.billingMode === 'weight' ? 50 : 1}}">+</text>
+              </view>
+            </view>
+            <view class="delete-btn" catchtap="removeFromCart" data-id="{{item.id}}">删除</view>
+          </movable-view>
+        </movable-area>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 挂单列表弹窗 -->
+  <view class="suspended-mask" wx:if="{{showSuspendedList}}" bindtap="toggleSuspendedList"></view>
+  <view class="suspended-popup {{showSuspendedList ? 'show' : ''}}">
+    <view class="suspended-header">挂单列表</view>
+    <scroll-view scroll-y class="suspended-scroll">
+      <view class="suspended-item" wx:for="{{suspendedOrders}}" wx:key="id" bindtap="pickUpOrder" data-order="{{item}}">
+        <view class="order-info">
+          <text class="order-time">{{item.createdAt}}</text>
+          <text class="order-preview">{{item.preview}}</text>
+          <text class="order-summary">{{item.items.length}}件商品 共￥{{item.totalAmount}}</text>
+        </view>
+        <text class="pick-btn">取出</text>
+      </view>
+      <view class="empty-tip" wx:if="{{suspendedOrders.length === 0}}">暂无挂单</view>
+    </scroll-view>
+  </view>
+
+  <!-- 底部购物车栏 -->
+  <view class="cart-bar">
+    <view class="suspended-entry" bindtap="toggleSuspendedList">
+      <view class="suspended-icon">
+        <icon type="waiting" size="24" color="#666"></icon>
+        <view class="badge" wx:if="{{suspendedOrdersCount > 0}}">{{suspendedOrdersCount}}</view>
+      </view>
+    </view>
+    <view class="cart-info" bindtap="toggleCart">
+      <view class="total-box">
+        <text class="total">￥{{totalAmount}}</text>
+        <text class="count">{{cart.length}}件商品</text>
+      </view>
+    </view>
+    <view class="actions">
+      <button class="btn-suspend" bindtap="hangUp">挂单</button>
+      <button class="btn-checkout" type="primary" bindtap="checkout">结算</button>
+    </view>
+  </view>
+</view>

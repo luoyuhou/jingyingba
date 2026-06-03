@@ -1,0 +1,63 @@
+<navigation-bar title="收银员管理" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y type="list">
+  <!-- 顶部操作区 -->
+  <view class="header-actions">
+    <view class="title-text">收银员列表</view>
+    <button class="btn-add-top" type="primary" size="mini" bindtap="toggleAdd">添加收银员</button>
+  </view>
+
+  <scroll-view class="scrollarea" scroll-y type="list">
+    <view class="container" style="margin: 0 0.5rem;">
+      <!-- 表格头部 -->
+      <view class="table-header">
+        <view class="th name">姓名</view>
+        <view class="th username">账号</view>
+        <view class="th status">状态</view>
+        <view class="th action">操作</view>
+      </view>
+
+      <!-- 表格内容 -->
+      <view class="table-body">
+        <view class="tr" wx:for="{{cashiers}}" wx:key="id">
+          <view class="td name">{{item.name}}</view>
+          <view class="td username">{{item.username}}</view>
+          <view class="td status">
+            <text class="status-tag {{item.status === 'disabled' ? 'disabled' : 'active'}}">{{item.status === 'disabled' ? '已禁用' : '正常'}}</text>
+          </view>
+          <view class="td action">
+            <text class="btn-op edit" bindtap="openEdit" data-cashier="{{item}}">改密</text>
+            <text class="btn-op toggle {{item.status === 'disabled' ? 'enable' : 'disable'}}" bindtap="toggleStatus" data-id="{{item.id}}" data-status="{{item.status}}">{{item.status === 'disabled' ? '启用' : '禁用'}}</text>
+            <text class="btn-op delete" bindtap="deleteCashier" data-id="{{item.id}}">删除</text>
+          </view>
+        </view>
+        <view class="empty" wx:if="{{cashiers.length === 0}}">暂无收银员数据</view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 添加弹窗 -->
+  <view class="modal" wx:if="{{showAdd}}">
+    <view class="modal-content">
+      <text class="modal-title">添加收银员</text>
+      <input class="input" placeholder="输入姓名" bindinput="onInput" data-field="newName" value="{{newName}}" />
+      <input class="input" placeholder="输入登录账号" bindinput="onInput" data-field="newUsername" value="{{newUsername}}" />
+      <input class="input" password placeholder="输入登录密码" bindinput="onInput" data-field="newPassword" value="{{newPassword}}" />
+      <view class="modal-btns">
+        <button class="btn-cancel" bindtap="toggleAdd">取消</button>
+        <button class="btn-confirm" type="primary" bindtap="addCashier">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 修改密码弹窗 -->
+  <view class="modal" wx:if="{{showEdit}}">
+    <view class="modal-content">
+      <text class="modal-title">修改密码 - {{currentCashier.name}}</text>
+      <input class="input" password placeholder="输入新密码" bindinput="onInput" data-field="editPassword" value="{{editPassword}}" />
+      <view class="modal-btns">
+        <button class="btn-cancel" bindtap="closeEdit">取消</button>
+        <button class="btn-confirm" type="primary" bindtap="updatePassword">确认修改</button>
+      </view>
+    </view>
+  </view>
+</scroll-view>

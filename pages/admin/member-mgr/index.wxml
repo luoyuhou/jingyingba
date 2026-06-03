@@ -1,0 +1,142 @@
+<navigation-bar title="会员管理" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="page-container">
+  <!-- 搜索栏与添加按钮 -->
+  <view class="header-actions">
+    <view class="search-bar">
+      <icon type="search" size="14"></icon>
+      <input class="search-input" placeholder="搜索姓名/手机号" bindinput="onSearch" value="{{searchQuery}}" />
+    </view>
+    <button class="" type="primary" size="mini" bindtap="toggleAdd">+会员</button>
+  </view>
+
+  <scroll-view class="scrollarea" scroll-y type="list">
+    <view class="container" style="margin: 0 0.5rem;">
+      <!-- 表格头部 -->
+      <view class="table-header">
+        <view class="th name">账号</view>
+        <view class="th count">次数</view>
+        <view class="th amount">已消费/元</view>
+        <view class="th balance">余额/元</view>
+        <view class="th points">积分</view>
+        <view class="th action">操作</view>
+      </view>
+
+      <!-- 表格内容 -->
+      <view class="table-body">
+        <view class="tr" wx:for="{{filteredMembers}}" wx:key="id">
+          <view class="td name">
+            <view>{{item.name}}</view>
+            <view>{{item.phone}}</view>
+          </view>
+          <view class="td count">{{item.orderCount}}</view>
+          <view class="td amount">{{item.totalSpent}}</view>
+          <view class="td balance">{{item.balance || '0.00'}}</view>
+          <view class="td points">{{item.points}}</view>
+          <view class="td action" style="text-align: center;">
+            <text class="btn-op recharge" bindtap="openRecharge" data-member="{{item}}">充值</text>
+            <text class="btn-op record" bindtap="openMemberRecords" data-member="{{item}}">记录</text>
+            <text class="btn-op delete" bindtap="deleteMember" data-id="{{item.id}}">删除</text>
+          </view>
+        </view>
+        <view class="empty" wx:if="{{filteredMembers.length === 0}}">暂无会员数据</view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 添加会员弹窗 -->
+  <view class="modal" wx:if="{{showAdd}}">
+    <view class="modal-content">
+      <text class="modal-title">添加会员</text>
+      <input class="input" placeholder="输入会员名称" bindinput="onInput" data-field="newName" value="{{newName}}" />
+      <input class="input" type="number" placeholder="输入手机号" bindinput="onInput" data-field="newPhone" value="{{newPhone}}" />
+      <view class="modal-btns">
+        <button class="btn-cancel" bindtap="toggleAdd">取消</button>
+        <button class="btn-confirm" type="primary" bindtap="addMember">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 会员充值与记录弹窗 -->
+  <view class="modal" wx:if="{{showRecharge}}">
+    <view class="modal-content recharge-modal">
+      <text class="modal-title">会员充值 - {{currentMember.phone}}</text>
+      
+      <!-- 充值操作区 -->
+      <view class="recharge-section">
+        <view class="current-info">当前余额: <text class="highlight">￥{{currentMember.balance || 0}}</text></view>
+        <view class="recharge-form">
+          <view class="form-row">
+            <text class="label">充值金额:</text>
+            <input class="input" type="digit" placeholder="实收金额" bindinput="onRechargeInput" value="{{rechargeAmount}}" />
+          </view>
+          <view class="form-row">
+            <text class="label">到账金额:</text>
+            <input class="input" type="digit" placeholder="账户增加金额" bindinput="onInput" data-field="receivedAmount" value="{{receivedAmount}}" />
+          </view>
+          <button class="btn-confirm-recharge" type="primary" bindtap="submitRecharge">充值</button>
+        </view>
+      </view>
+
+      <!-- 充值记录表 -->
+      <view class="logs-section">
+        <text class="section-title">充值历史</text>
+        <view class="mini-table">
+          <view class="mini-th-group">
+            <view class="mini-th">时间</view>
+            <view class="mini-th">充值金额</view>
+            <view class="mini-th">到账金额</view>
+            <view class="mini-th">收银员</view>
+          </view>
+          <scroll-view scroll-y class="mini-table-body">
+            <view class="mini-tr" wx:for="{{rechargeLogs}}" wx:key="id">
+              <view class="mini-td date">{{item.timestamp}}</view>
+              <view class="mini-td">￥{{item.amount}}</view>
+              <view class="mini-td highlight">￥{{item.receivedAmount}}</view>
+              <view class="mini-td">{{item.cashierName}}</view>
+            </view>
+            <view class="empty-mini" wx:if="{{rechargeLogs.length === 0}}">暂无记录</view>
+          </scroll-view>
+        </view>
+      </view>
+
+      <view class="modal-footer">
+        <button class="btn-close-full" bindtap="closeRecharge">关闭窗口</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 会员交易明细弹窗 (充值+消费) -->
+  <view class="modal" wx:if="{{showMemberRecords}}">
+    <view class="modal-content recharge-modal">
+      <text class="modal-title">交易明细 - {{currentMember.phone}}</text>
+      
+      <view class="logs-section" style="margin-top: 0;">
+        <view class="mini-table">
+          <view class="mini-th-group">
+            <view class="mini-th" style="flex: 0.6;">类型</view>
+            <view class="mini-th">金额变动</view>
+            <view class="mini-th" style="flex: 1.4;">时间</view>
+            <view class="mini-th" style="flex: 0.8;">明细</view>
+          </view>
+          <scroll-view scroll-y class="mini-table-body" style="height: 60vh;">
+            <view class="mini-tr" wx:for="{{memberRecords}}" wx:key="id">
+              <view class="mini-td" style="flex: 0.6;">
+                <text class="tag {{item.typeLabel === '充值' ? 'recharge-tag' : 'consume-tag'}}">{{item.typeLabel}}</text>
+              </view>
+              <view class="mini-td {{item.typeLabel === '充值' ? 'highlight' : ''}}">{{item.amountDisplay}}</view>
+              <view class="mini-td date" style="flex: 1.4;">{{item.time}}</view>
+              <view class="mini-td" style="flex: 0.8; font-size: 24rpx; color: #999;">
+                {{item.typeLabel === '充值' ? '实收' + item.amount : (item.paymentMethod === 'balance' ? '余额支付' : '现场支付')}}
+              </view>
+            </view>
+            <view class="empty-mini" wx:if="{{memberRecords.length === 0}}">暂无交易记录</view>
+          </scroll-view>
+        </view>
+      </view>
+
+      <view class="modal-footer">
+        <button class="btn-close-full" bindtap="closeMemberRecords">返回</button>
+      </view>
+    </view>
+  </view>
+</view>

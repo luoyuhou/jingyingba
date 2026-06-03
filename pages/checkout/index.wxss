@@ -1,0 +1,288 @@
+.container {
+  padding: 20rpx;
+  background: #f8f8f8;
+  min-height: 100vh;
+  padding-bottom: 180rpx;
+  display: block;
+}
+
+.section {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 5rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.02);
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 30rpx;
+  padding-left: 20rpx;
+  border-left: 8rpx solid #07c160;
+}
+
+/* 会员搜索 */
+.member-search {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.search-input {
+  flex: 1;
+  background: #f5f5f5;
+  height: 80rpx;
+  border-radius: 40rpx;
+  padding: 0 40rpx;
+  font-size: 28rpx;
+}
+
+.search-btn {
+  background: #07c160 !important;
+  color: #fff !important;
+  border-radius: 40rpx;
+  margin: 0 !important;
+}
+
+/* 会员信息展示 */
+.member-info-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.m-user {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 20rpx;
+}
+
+.m-name {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.m-phone {
+  font-size: 26rpx;
+  color: #999;
+  margin-left: 20rpx;
+}
+
+.change-member {
+  font-size: 24rpx;
+  color: #07c160;
+  margin-left: auto;
+}
+
+.m-stats {
+  display: flex;
+  background: #fdfdfd;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #f0f0f0;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-item .label {
+  font-size: 22rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.stat-item .value {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 订单明细 */
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.item-main {
+  flex: 1;
+}
+
+.order-item .name {
+  font-size: 28rpx;
+  margin-bottom: 4rpx;
+}
+
+.order-item .detail {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.order-item .detail .qty {
+  margin-left: 20rpx;
+}
+
+.order-item .price {
+  color: #333;
+  font-weight: bold;
+  font-size: 30rpx;
+}
+
+.total-row {
+  margin-top: 30rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.points-gain {
+  font-size: 24rpx;
+  color: #ff9800;
+}
+
+.total-amount {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.total-amount .p {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 积分抵扣 */
+.pd-header {
+  display: flex;
+  align-items: center;
+}
+
+.pd-title {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.pd-tip {
+  font-size: 22rpx;
+  color: #999;
+  background: #f5f5f5;
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  margin-left: 20rpx;
+}
+
+.pd-tip.active {
+  color: #07c160;
+  background: #e8f7ed;
+}
+
+.pd-header switch {
+  margin-left: auto;
+  transform: scale(0.8);
+}
+
+.pd-detail {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.pd-detail .minus {
+  color: #ff4400;
+  font-weight: bold;
+}
+
+/* 支付方式 */
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.method-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  border: 2rpx solid #f0f0f0;
+  border-radius: 12rpx;
+  transition: all 0.2s;
+}
+
+.method-item icon {
+  margin-right: 20rpx;
+}
+
+.method-item text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.method-item.active {
+  background: #f0faf3;
+  border-color: #07c160;
+}
+
+.method-item.active text {
+  color: #07c160;
+  font-weight: bold;
+}
+
+.method-item.disabled {
+  opacity: 0.5;
+  background: #f9f9f9;
+}
+
+/* 底部结算栏 */
+.footer-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 140rpx;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 40rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.05);
+  z-index: 100;
+}
+
+.final-info {
+  flex: 1;
+}
+
+.final-info .label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.final-info .amount {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #ff4400;
+  margin-left: 10rpx;
+}
+
+.confirm-btn {
+  width: 280rpx !important;
+  height: 90rpx;
+  line-height: 60rpx;
+  background: #07c160 !important;
+  border-radius: 45rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  margin: 0 !important;
+}

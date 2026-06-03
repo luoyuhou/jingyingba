@@ -1,0 +1,33 @@
+<navigation-bar title="系统设置" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="container">
+    <view class="section">
+      <view class="section-title">积分规则</view>
+      <view class="form-item">
+        <text class="label">消费1元获得积分数</text>
+        <input class="input" type="digit" value="{{pointsPerYuan}}" bindinput="onInput" data-field="pointsPerYuan" />
+      </view>
+      <view class="form-item">
+        <text class="label">抵扣1元所需积分数</text>
+        <input class="input" type="digit" value="{{pointsRedemptionRatio}}" bindinput="onInput" data-field="pointsRedemptionRatio" />
+      </view>
+      <view class="form-item">
+        <text class="label">积分抵扣日 (每月几号，多个用逗号隔开)</text>
+        <input class="input" type="text" value="{{redemptionDaysStr}}" placeholder="如: 5,15,25 (留空表示每天)" bindinput="onInput" data-field="redemptionDaysStr" />
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">数据存储</view>
+      <view class="form-item space-between">
+        <text class="label">开启远程存储</text>
+        <switch checked="{{isRemote}}" bindchange="onRemoteChange" />
+      </view>
+      <view class="tip">开启后，数据将尝试同步到云端（需配置接口）。当前模式：{{isRemote ? '远程' : '本地'}}</view>
+    </view>
+
+    <view class="footer">
+      <button type="primary" bindtap="save">保存设置</button>
+    </view>
+  </view>
+</scroll-view>

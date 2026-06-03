@@ -1,0 +1,34 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/cashier/index",
+    "pages/admin/index",
+    "pages/admin/category-mgr/index",
+    "pages/admin/product-mgr/index",
+    "pages/admin/product-edit/index",
+    "pages/admin/member-mgr/index",
+    "pages/admin/cashier-mgr/index",
+    "pages/admin/order-mgr/index",
+    "pages/admin/settings/index",
+    "pages/checkout/index"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "style": "v2",
+  "renderer": "skyline",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "defaultContentBox": true,
+      "tagNameStyleIsolation": "legacy",
+      "disableABTest": true,
+      "sdkVersionBegin": "3.0.0",
+      "sdkVersionEnd": "15.255.255"
+    }
+  },
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

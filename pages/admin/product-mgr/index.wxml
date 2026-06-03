@@ -1,0 +1,140 @@
+<navigation-bar title="商品与分类管理" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="mgr-container">
+  <!-- 顶部搜索与统计 -->
+  <view class="header-tools">
+    <view class="search-row">
+      <view class="search-bar">
+        <icon type="search" size="16"></icon>
+        <input class="search-input" placeholder="搜索商品名称或分类" bindinput="onSearchInput" value="{{searchKeyword}}" />
+      </view>
+      <button class="add-p-btn" type="primary" size="mini" bindtap="openProductModal">+ 商品</button>
+    </view>
+    <view class="stats-panel">
+      <view class="stat-item">
+        <text class="num">{{stats.total}}</text>
+        <text class="label">总数</text>
+      </view>
+      <view class="stat-item">
+        <text class="num color-green">{{stats.onSale}}</text>
+        <text class="label">在售</text>
+      </view>
+      <view class="stat-item">
+        <text class="num color-red">{{stats.offSale}}</text>
+        <text class="label">已下架</text>
+      </view>
+      <view class="stat-item">
+        <text class="num color-orange">{{stats.soldCount}}</text>
+        <text class="label">累计销量</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="content-body">
+    <!-- 左侧分类筛选与管理 -->
+    <scroll-view class="sidebar" scroll-y>
+      <view 
+        wx:for="{{categories}}" 
+        wx:key="id" 
+        class="cat-item {{activeCategoryId === item.id ? 'active' : ''}}"
+        bindtap="selectCategory"
+        data-id="{{item.id}}"
+      >
+        <text>{{item.name}}</text>
+      </view>
+    </scroll-view>
+
+    <!-- 右侧商品列表 -->
+    <scroll-view class="main-list" scroll-y>
+      <view class="list">
+        <view class="item {{item.status === 'off' ? 'status-off' : ''}}" wx:for="{{displayProducts}}" wx:key="id">
+          <view class="info" bindtap="openProductModal" data-id="{{item.id}}">
+            <view class="name-row">
+              <text class="name">{{item.name}}</text>
+              <text class="status-tag" wx:if="{{item.status === 'off'}}">已下架</text>
+            </view>
+            <view class="data-row">
+              <text class="price">￥{{item.price}} / {{item.billingMode === 'weight' ? '500g' : '件'}}</text>
+              <text class="sold-count">已售 {{item.soldCount}}</text>
+            </view>
+            <text class="categories">{{item.categoryNames}}</text>
+          </view>
+          <view class="actions">
+            <button size="mini" type="{{item.status === 'off' ? 'primary' : 'default'}}" catchtap="toggleStatus" data-id="{{item.id}}" data-status="{{item.status || 'on'}}">
+              {{item.status === 'off' ? '上架' : '下架'}}
+            </button>
+            <button size="mini" type="warn" catchtap="deleteProduct" data-id="{{item.id}}">删除</button>
+          </view>
+        </view>
+        <view class="empty-tip" wx:if="{{displayProducts.length === 0}}">
+          未找到匹配商品
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 添加分类弹窗 -->
+  <view class="modal" wx:if="{{showCatModal}}">
+    <view class="modal-content">
+      <text class="modal-title">添加新分类</text>
+      <input class="input" placeholder="输入分类名称" bindinput="onCatInput" value="{{newCatName}}" focus />
+      <view class="modal-btns">
+        <button size="mini" bindtap="toggleCatModal">取消</button>
+        <button size="mini" type="primary" bindtap="addCategory">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 商品编辑弹窗 -->
+  <view class="modal" wx:if="{{showProductModal}}">
+    <view class="modal-content product-modal">
+      <text class="modal-title">{{editingProduct.id ? '编辑商品' : '添加商品'}}</text>
+      <view class="p-form">
+        <view class="p-form-item">
+          <text class="p-label">商品名称</text>
+          <input class="p-input" placeholder="请输入名称" bindinput="onProductInput" data-field="name" value="{{editingProduct.name}}" />
+        </view>
+        <view class="p-form-item">
+          <text class="p-label">商品价格</text>
+          <input class="p-input" type="digit" placeholder="0.00" bindinput="onProductInput" data-field="price" value="{{editingProduct.price}}" />
+        </view>
+        <view class="p-form-item">
+          <text class="p-label">计费方式</text>
+          <radio-group class="p-radio-group" bindchange="onProductInput" data-field="billingMode">
+            <label class="p-radio-label">
+              <radio value="piece" checked="{{editingProduct.billingMode !== 'weight'}}" /> 按件
+            </label>
+            <label class="p-radio-label">
+              <radio value="weight" checked="{{editingProduct.billingMode === 'weight'}}" /> 称重 (500g)
+            </label>
+          </radio-group>
+        </view>
+        <view class="p-form-item">
+          <text class="p-label">所属分类 (可多选)</text>
+          <view class="p-cat-list">
+            <view 
+              wx:for="{{categories}}" 
+              wx:key="id" 
+              wx:if="{{item.id !== 'all'}}"
+              class="p-cat-tag {{utils.includes(editingProduct.categoryIds, item.id) ? 'active' : ''}}"
+              bindtap="toggleProductCat"
+              data-id="{{item.id}}"
+            >
+              {{item.name}}
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="modal-btns">
+        <button size="mini" bindtap="closeProductModal">取消</button>
+        <button size="mini" type="primary" bindtap="saveProduct">保存商品</button>
+      </view>
+    </view>
+  </view>
+</view>
+
+<wxs module="utils">
+module.exports.includes = function(arr, val) {
+  if (!arr) return false;
+  return arr.indexOf(val) !== -1;
+}
+</wxs>

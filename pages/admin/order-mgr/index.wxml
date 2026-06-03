@@ -1,0 +1,57 @@
+<navigation-bar title="订单管理" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<wxs module="priceUtils">
+  module.exports.toFixed = function(val) {
+    if (!val) return '0.00';
+    return parseFloat(val).toFixed(2);
+  }
+  module.exports.formatQty = function(item) {
+    if (!item) return '';
+    if (item.billingMode === 'weight') {
+      return item.quantity + 'g';
+    }
+    return 'x' + item.quantity;
+  }
+  module.exports.getSubtotal = function(item) {
+    if (!item) return '0.00';
+    var price = parseFloat(item.price) || 0;
+    var qty = parseFloat(item.quantity) || 0;
+    if (item.billingMode === 'weight') {
+      return (price * qty / 500).toFixed(2);
+    }
+    return (price * qty).toFixed(2);
+  }
+</wxs>
+<view class="container" style="padding: 1rpx 0">
+  <scroll-view class="order-list" scroll-y>
+    <view class="order-item" wx:for="{{orders}}" wx:key="id">
+      <view class="header">
+        <view class="left">
+          <text class="id">单号: {{item.id}}</text>
+          <text class="customer">客户: {{item.memberName}} ({{item.memberPhone || '散客'}})</text>
+        </view>
+        <text class="status completed">已结算</text>
+      </view>
+      <view class="content">
+        <view class="product-details">
+          <view class="p-row" wx:for="{{item.items}}" wx:for-item="prod" wx:key="id">
+            <text class="p-name">{{prod.name}}</text>
+            <text class="p-qty">{{priceUtils.formatQty(prod)}}</text>
+            <text class="p-subtotal">￥{{priceUtils.getSubtotal(prod)}}</text>
+          </view>
+        </view>
+        <view class="summary">
+          <text class="payment-method">
+            {{item.paymentMethod === 'balance' ? '余额支付' : '现场支付'}}
+          </text>
+          <view class="total">
+            合计: <text class="price">￥{{priceUtils.toFixed(item.payableAmount || item.totalAmount)}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="footer">
+        <text class="time">{{item.createdAt}}</text>
+      </view>
+    </view>
+    <view class="empty" wx:if="{{orders.length === 0}}">暂无结算订单</view>
+  </scroll-view>
+</view>
