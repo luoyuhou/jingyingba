@@ -235,8 +235,12 @@ Page({
     });
 
     this.toggleAdd();
-    this.loadData();
+    // 先清空搜索框，确保 loadData 后的 filterMembers 能显示全部数据
+    this.setData({ searchQuery: '' });
+    await this.loadData();
     wx.showToast({ title: '添加成功' });
+
+
   },
 
   async deleteMember(e) {

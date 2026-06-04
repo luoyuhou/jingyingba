@@ -47,9 +47,20 @@
   flex-direction: column;
   align-items: center;
   padding: 20rpx 0;
+  transition: all 0.2s;
+}
+
+.sidebar-btn.active text {
+  color: #07c160;
+  font-weight: bold;
+}
+
+.sidebar-btn:active {
+  background: #eee;
 }
 
 .sidebar-btn text {
+
   font-size: 24rpx;
   color: #666;
   margin-top: 8rpx;
@@ -183,7 +194,7 @@
 
 .actions {
   display: flex;
-  width: 40%;
+  width: 50%;
   align-items: center;
   gap: 15rpx;
   height: 100%;
@@ -372,8 +383,10 @@
 }
 
 .cart-scroll, .suspended-scroll {
-  max-height: 60vh;
+  height: 50vh;
+  min-height: 400rpx;
 }
+
 
 .cart-item-row {
   height: 120rpx;

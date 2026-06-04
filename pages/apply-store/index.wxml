@@ -1,0 +1,49 @@
+<navigation-bar title="申请门店" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="container">
+  <form bindsubmit="onSubmit">
+    <view class="section">
+      <view class="section-title">店铺信息</view>
+      <view class="input-group">
+        <text class="label">店铺名称</text>
+        <input name="store_name" placeholder="请输入店铺名称" value="{{formData.store_name}}" />
+      </view>
+      <view class="input-group">
+        <text class="label">联系电话</text>
+        <input name="phone" type="number" maxlength="11" placeholder="请输入联系电话" value="{{formData.phone}}" />
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">申请人信息</view>
+      <view class="input-group">
+        <text class="label">姓名</text>
+        <input name="id_name" placeholder="请输入申请人姓名" value="{{formData.id_name}}" />
+      </view>
+      <view class="input-group">
+        <text class="label">身份证号</text>
+        <input name="id_code" type="idcard" maxlength="18" placeholder="请输入身份证号码" value="{{formData.id_code}}" />
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">店铺地址</view>
+      <picker mode="multiSelector" bindchange="onRegionChange" bindcolumnchange="onRegionColumnChange" value="{{regionIndex}}" range="{{regionRange}}" range-key="name">
+        <view class="input-group">
+          <text class="label">所属地区</text>
+          <view class="picker-value {{regionText ? '' : 'placeholder'}}">
+            {{regionText || '请选择省/市/区/镇'}}
+          </view>
+        </view>
+      </picker>
+      <view class="input-group">
+        <text class="label">详细地址</text>
+        <textarea name="address" placeholder="请输入街道、门牌号等详细地址" value="{{formData.address}}" auto-height />
+      </view>
+    </view>
+
+    <view class="footer-btn">
+      <button form-type="submit" type="primary" loading="{{submitting}}">提交申请</button>
+      <view class="history-link" bindtap="navToHistory">查看申请记录</view>
+    </view>
+  </form>
+</view>

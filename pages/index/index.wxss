@@ -1,75 +1,125 @@
-/**index.wxss**/
 page {
   height: 100vh;
   display: flex;
   flex-direction: column;
-}
-.scrollarea {
-  flex: 1;
-  overflow-y: hidden;
-}
-
-.userinfo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #aaa;
-  width: 80%;
-}
-
-.userinfo-avatar {
   overflow: hidden;
-  width: 128rpx;
-  height: 128rpx;
-  margin: 20rpx;
-  border-radius: 50%;
+  background-color: #f4f4f4;
 }
 
-.usermotto {
-  margin-top: 200px;
-}
-
-.avatar-wrapper {
-  padding: 0;
-  width: 56px !important;
-  border-radius: 8px;
-  margin-top: 40px;
-  margin-bottom: 40px;
-}
-
-.avatar {
-  display: block;
-  width: 56px;
-  height: 56px;
-}
-
-.nickname-wrapper {
+.container {
+  flex: 1;
   display: flex;
-  width: 100%;
-  padding: 16px;
-  box-sizing: border-box;
-  border-top: .5px solid rgba(0, 0, 0, 0.1);
-  border-bottom: .5px solid rgba(0, 0, 0, 0.1);
-  color: black;
+  flex-direction: column;
+  padding: 0 !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  overflow: hidden;
+  height: 0; /* 关键：强制 flex 子元素在 overflow 时正确计算高度 */
 }
 
-.nickname-label {
-  width: 105px;
+.header {
+  padding: 60rpx 40rpx;
+  background-color: #fff;
+  margin-bottom: 20rpx;
+  flex-shrink: 0;
 }
 
-.nickname-input {
+.title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+}
+
+.subtitle {
+  font-size: 26rpx;
+  color: #999;
+  margin-top: 10rpx;
+  display: block;
+}
+
+.list-wrapper {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-list {
+  flex: 1;
+  height: 0;
+}
+
+.store-item {
+  background-color: #fff;
+  padding: 30rpx 40rpx;
+  margin-bottom: 2rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.store-item:active {
+  background-color: #fafafa;
+}
+
+.store-info {
   flex: 1;
 }
 
-.menu-btns {
-  margin-top: 60rpx;
-  width: 80%;
-  display: flex;
-  flex-direction: column;
-  gap: 30rpx;
+.store-name {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+  display: block;
 }
 
-.admin-btn {
-  background: #eee !important;
-  color: #333 !important;
+.store-address {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+  display: block;
 }
+
+.arrow {
+  width: 16rpx;
+  height: 16rpx;
+  border-top: 4rpx solid #ccc;
+  border-right: 4rpx solid #ccc;
+  transform: rotate(45deg);
+  margin-left: 20rpx;
+}
+
+.empty {
+  padding: 100rpx 0;
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.footer {
+  padding: 40rpx;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+  background-color: #fff;
+  flex-shrink: 0;
+  border-top: 1rpx solid #eee;
+}
+
+.apply-store-btn {
+  width: 100% !important;
+  border-radius: 44rpx;
+  font-size: 28rpx;
+  font-weight: normal;
+}
+
+.logout-btn {
+  width: 100% !important;
+  background-color: #fff;
+  color: #ff4d4f;
+  border: 1rpx solid #ff4d4f !important;
+  border-radius: 44rpx;
+  font-size: 28rpx;
+  font-weight: normal;
+}
+

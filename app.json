@@ -1,7 +1,10 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/login/index",
     "pages/cashier/index",
+    "pages/apply-store/index",
+    "pages/apply-list/index",
     "pages/admin/index",
     "pages/admin/category-mgr/index",
     "pages/admin/product-mgr/index",

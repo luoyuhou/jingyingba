@@ -1,30 +1,38 @@
-<!--index.wxml-->
-<navigation-bar title="经营吧" back="{{false}}" color="black" background="#FFF"></navigation-bar>
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
-    <view class="userinfo">
-      <block wx:if="{{canIUseNicknameComp && !hasUserInfo}}">
-        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-          <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
-        </button>
-        <view class="nickname-wrapper">
-          <text class="nickname-label">昵称</text>
-          <input type="nickname" class="nickname-input" placeholder="请输入昵称" bind:change="onInputChange" />
-        </view>
-      </block>
-      <block wx:elif="{{!hasUserInfo}}">
-        <button wx:if="{{canIUseGetUserProfile}}" bindtap="getUserProfile"> 获取头像昵称 </button>
-        <view wx:else> 请使用2.10.4及以上版本基础库 </view>
-      </block>
-      <block wx:else>
-        <image bindtap="bindViewTap" class="userinfo-avatar" src="{{userInfo.avatarUrl}}" mode="cover"></image>
-        <text class="userinfo-nickname">{{userInfo.nickName}}</text>
-      </block>
-    </view>
-
-    <view class="menu-btns">
-      <button type="primary" bindtap="navTo" data-url="/pages/cashier/index">进入收银台</button>
-      <button class="admin-btn" bindtap="navTo" data-url="/pages/admin/index">管理后台</button>
-    </view>
+<navigation-bar title="选择门店" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+<view class="container">
+  <view class="header">
+    <text class="title">请选择要进入的门店</text>
+    <text class="subtitle">当前账号关联的所有门店</text>
   </view>
-</scroll-view>
+
+  <view class="list-wrapper">
+    <scroll-view scroll-y class="store-list">
+      <view 
+        class="store-item" 
+        wx:for="{{stores}}" 
+        wx:key="store_id" 
+        bindtap="selectStore" 
+        data-id="{{item.store_id}}"
+        data-name="{{item.store_name}}"
+      >
+        <view class="store-info">
+          <text class="store-name">{{item.store_name}}</text>
+          <text class="store-address">{{item.province_name}}{{item.city_name}}{{item.area_name}}{{item.address}}</text>
+        </view>
+        <view class="arrow"></view>
+      </view>
+      
+      <view class="empty" wx:if="{{stores.length === 0 && !loading}}">
+        <text>未发现关联门店，请先提交门店申请</text>
+      </view>
+
+      <view style="margin-top: 40rpx; padding: 0 40rpx;">
+        <button class="apply-store-btn" bindtap="navToApply" type="primary" plain="true">申请新门店</button>
+      </view>
+    </scroll-view>
+  </view>
+  
+  <view class="footer">
+    <button class="logout-btn" bindtap="onLogout">切换账户</button>
+  </view>
+</view>

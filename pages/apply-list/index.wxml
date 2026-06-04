@@ -1,0 +1,34 @@
+<navigation-bar title="申请记录" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="container">
+  <view class="list" wx:if="{{list.length > 0}}">
+    <view class="card" wx:for="{{list}}" wx:key="id">
+      <view class="card-header">
+        <text class="store-name">{{item.store_name}}</text>
+        <text class="status-tag status-{{item.status}}">{{item.status === 0 ? '待处理' : (item.status === 1 ? '申请已接收' : (item.status === 2 ? '处理中' : (item.status === 3 ? '已通过' : '未知')))}}</text>
+      </view>
+      <view class="card-body">
+        <view class="info-row">
+          <text class="label">联系电话：</text>
+          <text class="val">{{item.phone}}</text>
+        </view>
+        <view class="info-row">
+          <text class="label">申请人：</text>
+          <text class="val">{{item.id_name}}</text>
+        </view>
+        <view class="info-row">
+          <text class="label">地址：</text>
+          <text class="val">{{item.province_name}}{{item.city_name}}{{item.area_name}}{{item.address}}</text>
+        </view>
+      </view>
+      <view class="card-footer" wx:if="{{item.status === 0}}">
+        <button class="edit-btn" size="mini" bindtap="onEdit" data-id="{{item.store_id}}">修改申请</button>
+      </view>
+    </view>
+  </view>
+  
+  <view class="empty" wx:else>
+    <image src="/assets/empty.png" mode="aspectFit" />
+    <text>暂无申请记录</text>
+    <button class="apply-btn" bindtap="navToApply">立即申请</button>
+  </view>
+</view>

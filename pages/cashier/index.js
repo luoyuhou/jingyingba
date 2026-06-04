@@ -24,10 +24,14 @@ Page({
   },
 
   async onShow() {
+    wx.showLoading({ title: '加载中' });
     await this.loadData();
+    // 挂单数据目前建议通过后端拉取，此处仍调用统一 list 接口
     await this.updateSuspendedData();
+    wx.hideLoading();
     
     // 检查是否需要清空购物车（结算成功后）
+
     if (getApp().globalData.shouldClearCart) {
       this.setData({
         cart: [],
@@ -262,6 +266,12 @@ Page({
 
   onPhoneInput(e) {
     this.setData({ searchPhone: e.detail.value });
+  },
+
+  navToAdmin() {
+    wx.navigateTo({
+      url: '/pages/admin/index'
+    });
   },
 
   async searchMember() {

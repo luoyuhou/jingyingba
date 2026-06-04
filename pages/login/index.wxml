@@ -1,0 +1,23 @@
+<view class="container">
+  <view class="logo-section">
+    <image class="logo" src="https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0" mode="aspectFit"></image>
+    <text class="title">经营吧收银系统</text>
+  </view>
+  
+  <view class="login-section">
+    <view class="user-preview" wx:if="{{hasUserInfo}}">
+      <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
+      <text class="nickname">{{userInfo.nickName}}</text>
+    </view>
+    
+    <button wx:if="{{!hasUserInfo}}" class="login-btn" open-type="getUserInfo" bindgetuserinfo="handleUserInfo">
+      微信授权登录
+    </button>
+    
+    <button wx:else class="login-btn" bindtap="onLogin">
+      进入系统
+    </button>
+    
+    <view class="tips">请使用门店管理员账号登录</view>
+  </view>
+</view>

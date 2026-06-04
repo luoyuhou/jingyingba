@@ -75,11 +75,11 @@
 }
 
 /* 列宽分配 - 重新微调占比 */
-.name { width: 20%; }
+.name { width: 22%; }
 .count { width: 10%; }
 .amount { width: 20%; }
 .balance { width: 20%; }
-.points { width: 15%; }
+.points { width: 13%; }
 .action { 
   width: 15%; 
   display: flex;

@@ -1,4 +1,5 @@
 {
+  "navigationBarTitleText": "选择门店",
   "usingComponents": {
     "navigation-bar": "/components/navigation-bar/navigation-bar"
   }
