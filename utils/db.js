@@ -28,6 +28,12 @@ class DB {
     wx.setStorageSync(STORAGE_KEY_PREFIX + 'store_id', id);
   }
 
+  getStoreId() {
+    if (this.storeId) return this.storeId;
+    this.storeId = wx.getStorageSync(STORAGE_KEY_PREFIX + 'store_id') || '';
+    return this.storeId;
+  }
+
   async _request(url, method = 'GET', data = {}) {
     return new Promise((resolve, reject) => {
       const header = {
@@ -100,7 +106,7 @@ class DB {
   /**
    * 获取列表数据
    */
-  async list(table) {
+  async list(table, params = {}) {
     if (!this.storeId && table !== TABLES.SETTINGS) {
        wx.redirectTo({ url: '/pages/index/index' });
        return [];
@@ -112,17 +118,69 @@ class DB {
         return table === TABLES.CATEGORIES ? data.categories : data.products;
       
       case TABLES.ORDERS:
-        // 在线查询当日已完成订单（可根据需要扩展后端接口）
-        const history = await this._request(`/store/cashier/orders/today/${this.storeId}`);
-        return history || [];
+        // 1. 获取本地挂单
+        const localPending = wx.getStorageSync(`suspended_orders_${this.storeId}`) || [];
+        // 2. 在线查询今日已完成订单
+        let history = [];
+        try {
+          // 如果传入了 memberId，则获取该会员的所有历史订单（不仅仅是今日）
+          if (params.memberId) {
+            history = await this._request(`/store/member/orders/${params.memberId}`);
+          } else {
+            history = await this._request(`/store/cashier/orders/today/${this.storeId}`);
+          }
+        } catch (e) {
+          console.warn('获取历史订单失败', e);
+        }
+        // 适配后端返回的字段名，确保 memberId 存在
+        const adaptedHistory = (history || []).map(o => ({
+          ...o,
+          memberId: o.memberId || o.user_id // 优先使用 memberId，兼容后端逻辑
+        }));
+        return [...localPending, ...adaptedHistory];
       
       case TABLES.MEMBERS:
-        // 建议使用专门的搜索接口，此处仅为占位
-        return [];
+        const members = await this._request(`/store/member/list/${this.storeId}`, 'GET', params);
+        return (members || []).map(m => ({
+          ...m,
+          id: m.member_id,
+          memberId: m.member_id, // 统一字段
+          balance: (m.balance / 100).toFixed(2) // 分转元
+        }));
+      
+      case TABLES.RECHARGES:
+        // 支持按会员 ID 过滤
+        const query = { ...params };
+        if (query.memberId) {
+          query.member_id = query.memberId;
+          delete query.memberId;
+        }
+        const recharges = await this._request(`/store/member/recharges/${this.storeId}`, 'GET', query);
+        return (recharges || []).map(r => ({
+          ...r,
+          memberId: r.member_id,
+          amount: (r.amount / 100).toFixed(2),
+          receivedAmount: (r.received_amount / 100).toFixed(2),
+          timestamp: r.create_date
+        }));
+
+
       
       default:
         return [];
     }
+
+  }
+
+
+  /**
+   * 搜索会员
+   */
+  async searchMember(phone) {
+    return await this._request('/store/member/search', 'GET', {
+      store_id: this.storeId,
+      phone
+    });
   }
 
   /**
@@ -130,45 +188,156 @@ class DB {
    */
   async get(table, id) {
     if (table === TABLES.MEMBERS) {
-      return await this._request(`/store/member/${id}`);
+      const res = await this._request(`/store/member/${id}`);
+      return {
+        ...res,
+        id: res.member_id,
+        balance: (res.balance / 100).toFixed(2)
+      };
     }
     return null;
   }
 
+
   /**
-   * 新增数据（主要用于创建订单）
+   * 新增数据
    */
   async add(table, data) {
+    if (table === TABLES.MEMBERS) {
+      return await this._request('/store/member', 'POST', {
+        ...data,
+        store_id: this.storeId
+      });
+    }
+
+    if (table === TABLES.RECHARGES) {
+      return await this._request('/store/member/recharge', 'POST', {
+        member_id: data.memberId,
+        store_id: this.storeId,
+        amount: Math.round(data.amount * 100),
+        received_amount: Math.round(data.receivedAmount * 100),
+        cashier_name: data.cashierName,
+        remark: data.remark || ''
+      });
+    }
+
     if (table === TABLES.ORDERS) {
+
+
+      // 挂单：仅保存在本地
+      if (data.status === 'pending') {
+        const localPending = wx.getStorageSync(`suspended_orders_${this.storeId}`) || [];
+        const newOrder = {
+          ...data,
+          id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        };
+        localPending.unshift(newOrder);
+        wx.setStorageSync(`suspended_orders_${this.storeId}`, localPending);
+        return newOrder;
+      }
+
+      // 结算：提交到后端
       const payload = {
         store_id: this.storeId,
-        orders: [{
+        order: {
           local_id: Date.now().toString(),
           member_id: data.memberId,
           total_amount: Math.round(parseFloat(data.totalAmount) * 100),
+          payable_amount: Math.round(parseFloat(data.payableAmount || data.totalAmount) * 100),
+          payment_method: data.paymentMethod,
+          points_used: data.pointsUsed || 0,
+          earn_points: data.earnPoints || 0,
           created_at: util.formatTime(new Date()),
           items: data.items.map(i => ({
             goods_id: i.id,
             version_id: i.versions?.[0]?.id || i.id,
             count: i.quantity,
+            name: i.name,
             price: Math.round(parseFloat(i.price) * 100)
           }))
-        }]
+        }
       };
-      const [res] = await this._request('/store/cashier/sync/orders', 'POST', payload);
+
+      const [res] = await this._request('/store/cashier/order', 'POST', payload);
       if (res && res.status === 'success') {
         wx.showToast({ title: '结算成功' });
         return { ...data, id: res.remote_id };
       }
       throw new Error('结算失败');
     }
+
+    if (table === TABLES.PRODUCTS) {
+      const payload = {
+        store_id: this.storeId,
+        category_id: data.categoryIds?.[0] || '',
+        name: data.name,
+        description: data.description || '',
+        price: Math.round(data.price * 100), // 元转分
+        unit_name: data.billingMode === 'weight' ? '斤' : '件',
+        count: 9999, // 默认无限库存
+        version_number: 'v1'
+      };
+      return await this._request('/store/goods', 'POST', payload);
+    }
+
+    if (table === TABLES.CATEGORIES) {
+      return await this._request('/store/category', 'POST', {
+        name: data.name,
+        pid: '0',
+        store_id: this.storeId
+      });
+    }
   }
 
   /**
-   * 移除数据（例如取消挂单，由于挂单现在也建议在线化，此处根据实际业务调整）
+   * 更新数据
+   */
+  async update(table, id, data) {
+    if (table === TABLES.PRODUCTS) {
+      const payload = {
+        name: data.name,
+        category_id: data.categoryIds?.[0],
+        price: data.price ? Math.round(data.price * 100) : undefined,
+        unit_name: data.billingMode ? (data.billingMode === 'weight' ? '斤' : '件') : undefined,
+        status: data.status === 'off' ? 0 : (data.status === 'on' ? 1 : undefined)
+      };
+      return await this._request(`/store/goods/${id}`, 'PATCH', payload);
+    }
+
+    if (table === TABLES.CATEGORIES) {
+      return await this._request(`/store/category/${id}`, 'PATCH', data);
+    }
+
+    if (table === TABLES.MEMBERS) {
+      return await this._request(`/store/member/${id}`, 'PATCH', data);
+    }
+  }
+
+  /**
+   * 移除数据
    */
   async remove(table, id) {
-    console.log('Remove not implemented for online mode');
+    if (table === TABLES.MEMBERS) {
+      return await this._request(`/store/member/${id}`, 'DELETE');
+    }
+
+    if (table === TABLES.ORDERS) {
+
+      const localPending = wx.getStorageSync(`suspended_orders_${this.storeId}`) || [];
+      const index = localPending.findIndex(o => o.id === id);
+      if (index !== -1) {
+        localPending.splice(index, 1);
+        wx.setStorageSync(`suspended_orders_${this.storeId}`, localPending);
+        return true;
+      }
+    }
+
+    if (table === TABLES.PRODUCTS) {
+      return await this._request(`/store/goods/${id}`, 'DELETE');
+    }
+    if (table === TABLES.CATEGORIES) {
+      return await this._request(`/store/category/${id}`, 'DELETE');
+    }
   }
 
   async getSettings() {

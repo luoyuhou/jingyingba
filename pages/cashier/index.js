@@ -3,70 +3,128 @@ const util = require('../../utils/util');
 
 Page({
   data: {
+    storeId: '',
     categories: [],
     products: [],
     filteredProducts: [],
     activeCategoryId: 'all',
-    cart: [],
-    totalAmount: 0,
-    member: null,
-    searchPhone: '',
     searchKeyword: '',
-    suspendedOrdersCount: 0,
-    suspendedOrders: [],
+    cart: [],
+    totalAmount: '0.00',
     showCartDetail: false,
     showSuspendedList: false,
-    showOrderHistory: false, // 历史订单弹窗
-    historyOrders: [], // 已结算订单列表
-    showWeightModal: false, // 称重弹窗
-    tempProduct: null, // 待称重商品
-    inputWeight: '' // 输入重量 (g)
+    showOrderHistory: false,
+    historyOrders: [],
+    suspendedOrdersCount: 0,
+    suspendedOrders: [],
+    showWeightModal: false,
+    tempProduct: null,
+    inputWeight: '',
+    searchPhone: '',
+    member: null
   },
 
-  async onShow() {
-    wx.showLoading({ title: '加载中' });
-    await this.loadData();
-    // 挂单数据目前建议通过后端拉取，此处仍调用统一 list 接口
-    await this.updateSuspendedData();
-    wx.hideLoading();
-    
-    // 检查是否需要清空购物车（结算成功后）
-
-    if (getApp().globalData.shouldClearCart) {
-      this.setData({
-        cart: [],
-        totalAmount: 0,
-        member: null,
-        searchPhone: '',
-        searchKeyword: ''
-      });
-      getApp().globalData.shouldClearCart = false;
-      this.applyFilter();
+  onLoad(options) {
+    if (options.sid) {
+      this.setData({ storeId: options.sid });
+      db.setStoreId(options.sid);
+    } else {
+      const sid = db.getStoreId();
+      this.setData({ storeId: sid });
     }
   },
 
-  async loadData() {
-    const categories = await db.list(TABLES.CATEGORIES);
-    let products = await db.list(TABLES.PRODUCTS);
-    products = products.filter(p => p.status !== 'off');
-    
-    this.setData({ 
-      categories: [{ id: 'all', name: '全部' }, ...categories],
-      products,
-      filteredProducts: products
+  resetCart() {
+    this.setData({
+      cart: [],
+      totalAmount: '0.00',
+      member: null,
+      searchPhone: '',
+      searchKeyword: '',
+      showCartDetail: false
     });
+  },
+
+  async onShow() {
+    // 检查是否需要清空购物车（结算成功后返回，支持全局变量和本地存储双重校验）
+    const app = getApp();
+    const shouldClear = (app && app.globalData && app.globalData.shouldClearCart) || wx.getStorageSync('shouldClearCart');
+    
+    if (shouldClear) {
+      this.resetCart();
+      if (app && app.globalData) {
+        app.globalData.shouldClearCart = false;
+        app.globalData.currentOrder = null;
+      }
+      wx.removeStorageSync('shouldClearCart');
+    }
+
+
+
+
+    wx.showLoading({ title: '加载中' });
+    try {
+      await this.loadData();
+      await this.updateSuspendedData();
+    } catch (err) {
+      console.error('onShow error:', err);
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+
+  async loadData() {
+    try {
+      if (!this.data.storeId) return;
+
+      // 1. 获取分类
+      const res = await db._request(`/store/category/${this.data.storeId}`, 'GET', {});
+      const categories = (res || []).map(c => ({ id: c.category_id, name: c.name }));
+
+      // 2. 获取商品
+      let products = await db.list(TABLES.PRODUCTS);
+      products = products.filter(p => p.status !== 'off');
+      
+      this.setData({ 
+        categories: [{ id: 'all', name: '全部' }, ...categories],
+        products,
+        activeCategoryId: 'all' // 进入时默认选中全部
+      }, () => {
+        this.applyFilter();
+      });
+    } catch (err) {
+      console.error('加载收银台数据失败:', err);
+      wx.showToast({ title: '加载数据失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   async updateSuspendedData() {
     const orders = await db.list(TABLES.ORDERS);
     const suspendedOrders = orders.filter(o => o.status === 'pending');
     
-    // 增加商品预览
+    // 增加商品详情和小计计算
     const processedOrders = suspendedOrders.map(o => {
-      const preview = o.items.map(i => i.name).join(', ');
+      const itemsWithSubtotal = o.items.map(item => {
+        let subtotal = 0;
+        const price = parseFloat(item.price) || 0;
+        const qty = parseFloat(item.quantity) || 0;
+        if (item.billingMode === 'weight') {
+          subtotal = (price * qty / 500);
+        } else {
+          subtotal = (price * qty);
+        }
+        return {
+          ...item,
+          subtotal: subtotal.toFixed(2)
+        };
+      });
+
       return {
         ...o,
-        preview: preview.length > 20 ? preview.substring(0, 20) + '...' : preview,
+        items: itemsWithSubtotal,
         createdAt: util.formatTime(new Date(o.createdAt))
       };
     });
@@ -211,28 +269,27 @@ Page({
     this.setData({ showOrderHistory: show });
     if (show) {
       wx.showLoading({ title: '加载中' });
-      const orders = await db.list(TABLES.ORDERS);
-      const members = await db.list(TABLES.MEMBERS);
-      
-      const today = util.formatTime(new Date()).split(' ')[0];
-      
-      const historyOrders = orders
-        .filter(o => o.status === 'completed' && o.createdAt.startsWith(today))
-        .map(o => {
-          const member = members.find(m => m.id === o.memberId);
-          return {
-            ...o,
-            memberName: member ? member.name : '散客',
-            memberPhone: member ? member.phone : '',
-            createdAt: util.formatTime(new Date(o.createdAt))
-          };
-        })
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      try {
+        const historyOrders = await db._request(`/store/cashier/orders/today/${this.data.storeId}`, 'GET');
 
-      this.setData({ historyOrders });
-      wx.hideLoading();
+        
+        // 后端已经返回了处理好的格式（memberName, memberPhone, items, billingMode 等）
+        // 我们只需要对时间进行简单的格式化显示即可
+        const processedOrders = (historyOrders || []).map(o => ({
+          ...o,
+          createdAt: util.formatTime(new Date(o.createdAt))
+        }));
+
+        this.setData({ historyOrders: processedOrders });
+      } catch (err) {
+        console.error('获取历史订单失败:', err);
+        wx.showToast({ title: '获取历史记录失败', icon: 'none' });
+      } finally {
+        wx.hideLoading();
+      }
     }
   },
+
 
   async hangUp() {
     if (this.data.cart.length === 0) return;
@@ -245,7 +302,7 @@ Page({
       createdAt: util.formatTime(new Date())
     });
 
-    this.setData({ cart: [], totalAmount: 0, member: null, searchKeyword: '', showCartDetail: false });
+    this.setData({ cart: [], totalAmount: '0.00', member: null, searchKeyword: '', showCartDetail: false });
     await this.updateSuspendedData();
     wx.showToast({ title: '已挂单' });
   },
@@ -276,14 +333,29 @@ Page({
 
   async searchMember() {
     if (!this.data.searchPhone) return;
-    const members = await db.list(TABLES.MEMBERS);
-    const member = members.find(m => m.phone === this.data.searchPhone);
-    if (member) {
-      this.setData({ member });
-    } else {
-      wx.showToast({ title: '未找到会员', icon: 'none' });
+    wx.showLoading({ title: '搜索中' });
+    try {
+      const member = await db.searchMember(this.data.searchPhone);
+      if (member) {
+        this.setData({ 
+          member: {
+            ...member,
+            id: member.member_id,
+            balance: (member.balance / 100).toFixed(2)
+          }
+        });
+        wx.showToast({ title: '识别成功' });
+      } else {
+        wx.showToast({ title: '未找到会员', icon: 'none' });
+      }
+    } catch (err) {
+      console.error('搜索会员失败:', err);
+      wx.showToast({ title: '搜索失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
     }
   },
+
 
   clearCart() {
     wx.showModal({

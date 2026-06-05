@@ -31,10 +31,9 @@ Page({
     const memberStats = members.map(member => {
       const memberOrders = completedOrders.filter(o => o.memberId === member.id);
       const orderCount = memberOrders.length;
-      const totalSpent = memberOrders.reduce((sum, o) => sum + parseFloat(o.payableAmount || 0), 0).toFixed(2);
+      const totalSpent = memberOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0).toFixed(2);
       
       return {
-        balance: 0, // 默认余额
         ...member,
         orderCount,
         totalSpent
@@ -48,13 +47,13 @@ Page({
     });
   },
 
+
   // 充值及记录相关
   async openRecharge(e) {
     const { member } = e.currentTarget.dataset;
-    const allLogs = await db.list(TABLES.RECHARGES);
-    const memberLogs = allLogs
-      .filter(l => l.memberId === member.id)
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    // 传入 memberId 进行过滤
+    const memberLogs = await db.list(TABLES.RECHARGES, { memberId: member.id });
+    const formattedLogs = memberLogs
       .map(l => ({
         ...l,
         timestamp: util.formatTime(new Date(l.timestamp))
@@ -65,9 +64,10 @@ Page({
       currentMember: member,
       rechargeAmount: '',
       receivedAmount: '',
-      rechargeLogs: memberLogs
+      rechargeLogs: formattedLogs
     });
   },
+
 
   onRechargeInput(e) {
     const val = e.detail.value;
@@ -91,26 +91,26 @@ Page({
     const { member } = e.currentTarget.dataset;
     wx.showLoading({ title: '加载中' });
     
-    // 获取充值记录
-    const allRecharges = await db.list(TABLES.RECHARGES);
-    const memberRecharges = allRecharges.filter(l => l.memberId === member.id).map(l => ({
+    // 获取该会员的所有充值记录
+    const memberRecharges = await db.list(TABLES.RECHARGES, { memberId: member.id });
+    const formattedRecharges = memberRecharges.map(l => ({
       ...l,
       typeLabel: '充值',
       amountDisplay: `+￥${l.receivedAmount}`,
       time: util.formatTime(new Date(l.timestamp))
     }));
 
-    // 获取消费记录
-    const allOrders = await db.list(TABLES.ORDERS);
-    const memberOrders = allOrders.filter(o => o.memberId === member.id && o.status === 'completed').map(o => ({
+    // 获取该会员的所有历史消费记录
+    const memberOrders = await db.list(TABLES.ORDERS, { memberId: member.id });
+    const formattedOrders = memberOrders.map(o => ({
       ...o,
       typeLabel: '消费',
-      amountDisplay: `-￥${o.payableAmount}`,
+      amountDisplay: `-￥${o.totalAmount}`,
       time: util.formatTime(new Date(o.createdAt))
     }));
 
     // 合并并按时间倒序排序
-    const mergedRecords = [...memberRecharges, ...memberOrders].sort((a, b) => new Date(b.time) - new Date(a.time));
+    const mergedRecords = [...formattedRecharges, ...formattedOrders].sort((a, b) => new Date(b.time) - new Date(a.time));
 
     this.setData({
       showMemberRecords: true,
@@ -119,6 +119,8 @@ Page({
     });
     wx.hideLoading();
   },
+
+
 
   closeMemberRecords() {
     this.setData({
@@ -142,44 +144,42 @@ Page({
       return;
     }
 
-    const newBalance = (parseFloat(currentMember.balance) || 0) + received;
-    
-    // 1. 更新会员余额
-    await db.update(TABLES.MEMBERS, currentMember.id, { balance: newBalance });
+    wx.showLoading({ title: '处理中' });
+    try {
+      // 1. 调用后端统一充值接口
+      await db.add(TABLES.RECHARGES, {
+        memberId: currentMember.id,
+        amount: amount,
+        receivedAmount: received,
+        cashierName: getApp().globalData.currentCashierName || '管理员'
+      });
 
-    // 2. 记录充值流水
-    await db.add(TABLES.RECHARGES, {
-      memberId: currentMember.id,
-      memberName: currentMember.name,
-      amount: amount,
-      receivedAmount: received,
-      cashierName: getApp().globalData.currentCashierName || '管理员',
-      type: 'recharge',
-      timestamp: util.formatTime(new Date())
-    });
-
-    wx.showToast({ title: '充值成功' });
-    
-    // 重新加载数据以刷新列表和弹窗内的记录
-    this.loadData();
-    
-    // 刷新当前弹窗内的记录列表
-    const allLogs = await db.list(TABLES.RECHARGES);
-    const memberLogs = allLogs
-      .filter(l => l.memberId === currentMember.id)
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .map(l => ({
+      wx.showToast({ title: '充值成功' });
+      
+      // 2. 刷新列表和当前会员状态
+      await this.loadData();
+      const updatedMember = await db.get(TABLES.MEMBERS, currentMember.id);
+      const memberLogs = await db.list(TABLES.RECHARGES, { memberId: currentMember.id });
+      const formattedLogs = memberLogs.map(l => ({
         ...l,
         timestamp: util.formatTime(new Date(l.timestamp))
       }));
-    
-    this.setData({
-      rechargeAmount: '',
-      receivedAmount: '',
-      rechargeLogs: memberLogs,
-      'currentMember.balance': newBalance
-    });
+      
+      this.setData({
+        rechargeAmount: '',
+        receivedAmount: '',
+        rechargeLogs: formattedLogs,
+        currentMember: updatedMember
+      });
+
+    } catch (err) {
+      console.error('充值失败:', err);
+      wx.showToast({ title: '充值失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
+
 
   onSearch(e) {
     this.setData({ searchQuery: e.detail.value }, () => {

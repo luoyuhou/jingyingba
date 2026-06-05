@@ -7,6 +7,7 @@ App({
     userInfo: null,
     currentOrder: null,
     resumedOrder: null,
+    shouldClearCart: false,
     currentCashierId: 'admin'
   }
 })

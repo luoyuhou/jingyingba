@@ -4,10 +4,10 @@
   <scroll-view class="sidebar" scroll-y>
     <view 
       wx:for="{{categories}}" 
-      wx:key="id" 
-      class="cat-item {{activeId === item.id ? 'active' : ''}}"
+      wx:key="category_id" 
+      class="cat-item {{activeId === item.category_id ? 'active' : ''}}"
       bindtap="selectCategory"
-      data-id="{{item.id}}"
+      data-id="{{item.category_id}}"
     >
       {{item.name}}
     </view>

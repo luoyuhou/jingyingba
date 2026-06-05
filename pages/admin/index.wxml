@@ -8,7 +8,7 @@
       </view>
       <view class="grid-item" bindtap="navTo" data-url="/pages/admin/product-mgr/index">
         <text class="icon">🍔</text>
-        <text>商品与分类管理</text>
+        <text>商品管理</text>
       </view>
       <view class="grid-item" bindtap="navTo" data-url="/pages/admin/member-mgr/index">
         <text class="icon">👥</text>

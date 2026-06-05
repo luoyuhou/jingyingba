@@ -130,21 +130,7 @@ Page({
     wx.showLoading({ title: '处理中' });
 
     try {
-      // 1. 更新会员数据（积分和余额）
-      if (member) {
-        const updateData = {};
-        // 扣除积分，增加新产生的积分
-        const earnPoints = Math.floor(parseFloat(payableAmount) * (settings.pointsPerYuan || 1));
-        updateData.points = (member.points || 0) - pointsToUse + earnPoints;
-        
-        if (paymentMethod === 'balance') {
-          updateData.balance = (member.balance || 0) - parseFloat(payableAmount);
-        }
-        
-        await db.update(TABLES.MEMBERS, member.id, updateData);
-      }
-
-      // 2. 保存订单
+      // 1. 保存订单（余额和积分扣除现在由后端在 orders/sync 事务中处理，不再由前端 PATCH 修改）
       const finalOrder = await db.add(TABLES.ORDERS, {
         items: order.items,
         totalAmount: order.totalAmount,
@@ -161,12 +147,35 @@ Page({
       wx.hideLoading();
       wx.showToast({ title: '支付成功' });
       
-      // 设置标记，返回收银台时清空购物车
+      // 直接通过页面栈清空收银台购物车，确保返回时已清空
+      const pages = getCurrentPages();
+      const prevPage = pages.find(p => p.route === 'pages/cashier/index');
+      if (prevPage) {
+        if (typeof prevPage.resetCart === 'function') {
+          prevPage.resetCart();
+        } else {
+          prevPage.setData({
+            cart: [],
+            totalAmount: '0.00',
+            member: null,
+            searchPhone: '',
+            searchKeyword: '',
+            showCartDetail: false
+          });
+        }
+      }
+
+      
+      // 双重保险：设置 Storage 标记和全局变量
+      wx.setStorageSync('shouldClearCart', true);
       getApp().globalData.shouldClearCart = true;
+      getApp().globalData.currentOrder = null;
       
       setTimeout(() => {
         wx.navigateBack();
       }, 1500);
+
+
     } catch (e) {
       wx.hideLoading();
       wx.showToast({ title: '支付失败', icon: 'none' });

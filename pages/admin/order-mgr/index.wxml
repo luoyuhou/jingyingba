@@ -9,8 +9,9 @@
     if (item.billingMode === 'weight') {
       return item.quantity + 'g';
     }
-    return 'x' + item.quantity;
+    return 'x' + item.quantity + '个';
   }
+
   module.exports.getSubtotal = function(item) {
     if (!item) return '0.00';
     var price = parseFloat(item.price) || 0;

@@ -73,7 +73,7 @@ Page({
     wx.showToast({ title: '已进入' + name, icon: 'none' });
     
     setTimeout(() => {
-      wx.navigateTo({ url: '/pages/cashier/index' });
+      wx.navigateTo({ url: `/pages/cashier/index?sid=${id}` });
     }, 1000);
   },
 

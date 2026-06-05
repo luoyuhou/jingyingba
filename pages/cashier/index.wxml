@@ -9,8 +9,9 @@
     if (item.billingMode === 'weight') {
       return item.quantity + 'g';
     }
-    return 'x' + item.quantity;
+    return 'x' + item.quantity + '个';
   }
+
   module.exports.getSubtotal = function(item) {
     if (!item) return '0.00';
     var price = parseFloat(item.price) || 0;
@@ -154,13 +155,23 @@
   <view class="suspended-popup {{showSuspendedList ? 'show' : ''}}">
     <view class="suspended-header">挂单列表</view>
     <scroll-view scroll-y class="suspended-scroll">
-      <view class="suspended-item" wx:for="{{suspendedOrders}}" wx:key="id" bindtap="pickUpOrder" data-order="{{item}}">
-        <view class="order-info">
-          <text class="order-time">{{item.createdAt}}</text>
-          <text class="order-preview">{{item.preview}}</text>
-          <text class="order-summary">{{item.items.length}}件商品 共￥{{item.totalAmount}}</text>
+      <view class="suspended-item" wx:for="{{suspendedOrders}}" wx:key="id">
+        <view class="order-info" bindtap="pickUpOrder" data-order="{{item}}">
+          <view class="order-top">
+            <text class="order-time">{{item.createdAt}}</text>
+            <text class="pick-btn">取出</text>
+          </view>
+          <view class="order-detail-list">
+            <view class="order-detail-item" wx:for="{{item.items}}" wx:for-item="prod" wx:key="index">
+              <text class="d-name">{{prod.name}} {{priceUtils.formatQty(prod)}}</text>
+              <text class="d-subtotal">￥{{prod.subtotal}}</text>
+            </view>
+          </view>
+          <view class="order-summary">
+            <text>共 {{item.items.length}} 件商品</text>
+            <text class="order-total">合计: <text class="total-price">￥{{item.totalAmount}}</text></text>
+          </view>
         </view>
-        <text class="pick-btn">取出</text>
       </view>
       <view class="empty-tip" wx:if="{{suspendedOrders.length === 0}}">暂无挂单</view>
     </scroll-view>

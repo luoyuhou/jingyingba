@@ -11,27 +11,26 @@ Page({
   },
 
   async loadData() {
-    let orders = await db.list(TABLES.ORDERS);
-    const members = await db.list(TABLES.MEMBERS);
-    
-    // 仅展示已结算订单
-    orders = orders.filter(o => o.status === 'completed');
-    
-    // 关联会员姓名和手机号
-    orders = orders.map(o => {
-      const member = members.find(m => m.id === o.memberId);
-      return {
-        ...o,
-        memberName: member ? member.name : '散客',
-        memberPhone: member ? member.phone : '',
-        createdAt: util.formatTime(new Date(o.createdAt))
-      };
-    });
+    wx.showLoading({ title: '加载中' });
+    try {
+      const storeId = db.getStoreId();
+      const orders = await db._request(`/store/cashier/orders/today/${storeId}`, 'GET');
 
-    // 按时间倒序
-    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    this.setData({ orders });
+      
+      const processedOrders = (orders || []).map(o => ({
+        ...o,
+        createdAt: util.formatTime(new Date(o.createdAt))
+      }));
+
+      this.setData({ orders: processedOrders });
+    } catch (err) {
+      console.error('加载订单列表失败:', err);
+      wx.showToast({ title: '加载失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
+
 
   filterStatus(e) {
     const status = e.currentTarget.dataset.status;
