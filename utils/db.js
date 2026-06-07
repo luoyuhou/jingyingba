@@ -269,7 +269,7 @@ class DB {
     if (table === TABLES.PRODUCTS) {
       const payload = {
         store_id: this.storeId,
-        category_id: data.categoryIds?.[0] || '',
+        category_ids: data.categoryIds || [],
         name: data.name,
         description: data.description || '',
         price: Math.round(data.price * 100), // 元转分
@@ -279,6 +279,7 @@ class DB {
       };
       return await this._request('/store/goods', 'POST', payload);
     }
+
 
     if (table === TABLES.CATEGORIES) {
       return await this._request('/store/category', 'POST', {
@@ -296,13 +297,14 @@ class DB {
     if (table === TABLES.PRODUCTS) {
       const payload = {
         name: data.name,
-        category_id: data.categoryIds?.[0],
+        category_ids: data.categoryIds,
         price: data.price ? Math.round(data.price * 100) : undefined,
         unit_name: data.billingMode ? (data.billingMode === 'weight' ? '斤' : '件') : undefined,
         status: data.status === 'off' ? 0 : (data.status === 'on' ? 1 : undefined)
       };
       return await this._request(`/store/goods/${id}`, 'PATCH', payload);
     }
+
 
     if (table === TABLES.CATEGORIES) {
       return await this._request(`/store/category/${id}`, 'PATCH', data);
@@ -341,6 +343,21 @@ class DB {
   }
 
   async getSettings() {
+    try {
+      if (!this.storeId) return this.getDefaultSettings();
+      return await this._request(`/store/settings/${this.storeId}`);
+    } catch (e) {
+      console.warn('获取设置失败，返回默认值', e);
+      return this.getDefaultSettings();
+    }
+  }
+
+  async saveSettings(settings) {
+    if (!this.storeId) return;
+    return await this._request(`/store/settings/${this.storeId}`, 'PATCH', settings);
+  }
+
+  getDefaultSettings() {
     return {
       pointsPerYuan: 1,
       pointsRedemptionRatio: 100,
@@ -348,6 +365,7 @@ class DB {
       redemptionDays: []
     };
   }
+
 }
 
 const db = new DB();

@@ -17,15 +17,6 @@
       </view>
     </view>
 
-    <view class="section">
-      <view class="section-title">数据存储</view>
-      <view class="form-item space-between">
-        <text class="label">开启远程存储</text>
-        <switch checked="{{isRemote}}" bindchange="onRemoteChange" />
-      </view>
-      <view class="tip">开启后，数据将尝试同步到云端（需配置接口）。当前模式：{{isRemote ? '远程' : '本地'}}</view>
-    </view>
-
     <view class="footer">
       <button type="primary" bindtap="save">保存设置</button>
     </view>

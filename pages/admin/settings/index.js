@@ -5,7 +5,6 @@ Page({
     pointsPerYuan: 1,
     pointsRedemptionRatio: 100,
     redemptionDaysStr: '',
-    isRemote: false
   },
 
   async onLoad() {
@@ -14,20 +13,12 @@ Page({
       pointsPerYuan: settings.pointsPerYuan,
       pointsRedemptionRatio: settings.pointsRedemptionRatio,
       redemptionDaysStr: (settings.redemptionDays || []).join(','),
-      isRemote: db.isRemote
     });
   },
 
   onInput(e) {
     const { field } = e.currentTarget.dataset;
     this.setData({ [field]: e.detail.value });
-  },
-
-  onRemoteChange(e) {
-    const isRemote = e.detail.value;
-    db.setRemote(isRemote);
-    this.setData({ isRemote });
-    wx.showToast({ title: isRemote ? '已切换至远程' : '已切换至本地' });
   },
 
   async save() {
