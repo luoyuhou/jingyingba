@@ -21,6 +21,16 @@
     }
     return (price * qty).toFixed(2);
   }
+
+  module.exports.getCartInfo = function(cart, productId) {
+    if (!cart || !productId) return null;
+    for (var i = 0; i < cart.length; i++) {
+      if (cart[i].id === productId) {
+        return cart[i];
+      }
+    }
+    return null;
+  }
 </wxs>
 <view class="cashier-container">
   <!-- 左侧分类 -->
@@ -62,6 +72,16 @@
     <scroll-view class="main" scroll-y>
       <view class="product-grid">
         <view class="product-item" wx:for="{{filteredProducts}}" wx:key="id" bindtap="addToCart" data-product="{{item}}">
+          <!-- 商品角标 -->
+          <block wx:if="{{priceUtils.getCartInfo(cart, item.id)}}">
+            <view class="product-badge" wx:if="{{item.billingMode !== 'weight'}}">
+              {{priceUtils.getCartInfo(cart, item.id).quantity}}
+            </view>
+            <view class="product-badge weight-badge" wx:else>
+              <icon type="success_no_circle" size="10" color="#fff"></icon>
+            </view>
+          </block>
+          
           <text class="p-name">{{item.name}}</text>
           <text class="p-price">￥{{item.price}}<text style="font-size: 20rpx; font-weight: normal; color: #999;">{{item.billingMode === 'weight' ? '/500g' : ''}}</text></text>
         </view>
@@ -73,15 +93,18 @@
   <view class="history-mask" wx:if="{{showOrderHistory}}" bindtap="toggleOrderHistory"></view>
   <view class="history-popup {{showOrderHistory ? 'show' : ''}}">
     <view class="history-header">
-      <text>最近成交记录</text>
+      <view style="display: flex; align-items: center;">
+        <text>最近成交记录</text>
+        <text wx:if="{{todayOrderCount > 0}}" style="margin-left: 20rpx; font-size: 24rpx; color: #07c160; background: #e8f7ed; padding: 4rpx 12rpx; border-radius: 4rpx;">今日共 {{todayOrderCount}} 笔</text>
+      </view>
       <icon type="cancel" size="24" color="#ccc" bindtap="toggleOrderHistory"></icon>
     </view>
-    <scroll-view scroll-y class="history-scroll">
-      <view class="history-item" wx:for="{{historyOrders}}" wx:key="id">
+    <scroll-view scroll-y class="history-scroll" bindscrolltolower="onHistoryScrollToLower" lower-threshold="50">
+      <view class="history-item" wx:for="{{historyOrders}}" wx:key="id" bindtap="showOrderDetail" data-order="{{item}}">
         <view class="h-order-body">
           <view style="display: flex; justify-content: space-between; align-items: center;">
                 <view class="h-customer">{{item.memberName}} ({{item.memberPhone || '散客'}})</view>
-                <text class="h-method">{{item.paymentMethod === 'balance' ? '余额' : '现场'}}支付</text>
+                <text class="h-method">{{item.paymentMethod === 'balance' ? '余额' : '现金'}}支付</text>
           </view>
           <view class="h-items">
             <view class="h-prod" wx:for="{{item.items}}" wx:for-item="prod" wx:key="id">
@@ -89,14 +112,95 @@
               <text>￥{{priceUtils.getSubtotal(prod)}}</text>
             </view>
           </view>
-          <view style="display: flex; justify-content: space-between; align-items: center;">
-            <text class="h-time">{{item.createdAt}}</text>
-            <view class="h-total">实收: <text class="h-price">￥{{priceUtils.toFixed(item.payableAmount || item.totalAmount)}}</text></view>
+          <view style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <view>
+              <text class="h-time">{{item.createdAt}}</text>
+              <view class="h-earn-points" wx:if="{{item.earnPoints > 0 || item.earn_points > 0}}">获得 +{{item.earnPoints || item.earn_points}} 积分</view>
+            </view>
+            <view style="text-align: right;">
+              <view class="h-receivable" style="color: #666; font-size: 24rpx; margin-bottom: 6rpx;">
+                应收: ￥{{priceUtils.toFixed(item.totalAmount)}}
+              </view>
+              <view class="h-discount" wx:if="{{item.discountAmount > 0}}" style="color: #ff4400; font-size: 24rpx; margin-bottom: 6rpx;">
+                积分抵扣: -￥{{priceUtils.toFixed(item.discountAmount)}} ({{item.pointsUsed}}积分)
+              </view>
+              <view class="h-total" style="font-size: 26rpx;">
+                实收: <text class="h-price">￥{{priceUtils.toFixed(item.payableAmount)}}</text>
+              </view>
+            </view>
           </view>
         </view>
       </view>
+      <!-- 加载状态提示 -->
+      <view class="load-more-tip" wx:if="{{historyOrders.length > 0}}">
+        <text wx:if="{{historyLoading}}">加载中...</text>
+        <text wx:elif="{{historyHasMore}}">上拉加载更多</text>
+        <text wx:else="{{!historyHasMore}}" style="color: #999;">没有更多数据了</text>
+      </view>
       <view class="empty-tip" wx:if="{{historyOrders.length === 0}}">暂无成交订单</view>
     </scroll-view>
+  </view>
+
+  <!-- 订单详情模态框 -->
+  <view class="order-detail-modal" wx:if="{{showOrderDetailModal}}">
+    <view class="order-detail-mask" bindtap="closeOrderDetail"></view>
+    <view class="order-detail-content">
+      <view class="order-detail-header">
+        <text class="order-detail-title">订单详情</text>
+        <icon type="cancel" size="24" color="#ccc" bindtap="closeOrderDetail"></icon>
+      </view>
+      <scroll-view scroll-y class="order-detail-body" wx:if="{{selectedOrder}}">
+        <view class="detail-section">
+          <view class="detail-row">
+            <text class="detail-label">订单号</text>
+            <text class="detail-value">{{selectedOrder.id}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">客户</text>
+            <text class="detail-value">{{selectedOrder.memberName}} ({{selectedOrder.memberPhone || '散客'}})</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">支付方式</text>
+            <text class="detail-value">{{selectedOrder.paymentMethod === 'balance' ? '余额支付' : '现金支付'}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">成交时间</text>
+            <text class="detail-value">{{selectedOrder.createdAt}}</text>
+          </view>
+        </view>
+        
+        <view class="detail-section">
+          <view class="detail-section-title">商品明细</view>
+          <view class="detail-item" wx:for="{{selectedOrder.items}}" wx:for-item="prod" wx:key="id">
+            <view class="detail-item-left">
+              <text class="detail-item-name">{{prod.name}}</text>
+              <text class="detail-item-qty">{{priceUtils.formatQty(prod)}}</text>
+            </view>
+            <text class="detail-item-price">￥{{priceUtils.getSubtotal(prod)}}</text>
+          </view>
+        </view>
+        
+        <view class="detail-section">
+          <view class="detail-section-title">金额明细</view>
+          <view class="detail-amount-row">
+            <text>应收合计</text>
+            <text>￥{{priceUtils.toFixed(selectedOrder.totalAmount)}}</text>
+          </view>
+          <view class="detail-amount-row discount" wx:if="{{selectedOrder.discountAmount > 0}}">
+            <text>积分抵扣 ({{selectedOrder.pointsUsed}} 积分)</text>
+            <text>-￥{{priceUtils.toFixed(selectedOrder.discountAmount)}}</text>
+          </view>
+          <view class="detail-amount-row earn" wx:if="{{selectedOrder.earnPoints > 0}}">
+            <text>获得积分</text>
+            <text>+{{selectedOrder.earnPoints}} 积分</text>
+          </view>
+          <view class="detail-amount-row total">
+            <text>实收金额</text>
+            <text class="total-price">￥{{priceUtils.toFixed(selectedOrder.payableAmount)}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
   </view>
 
   <!-- 称重弹窗 -->

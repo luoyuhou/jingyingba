@@ -11,10 +11,16 @@ Page({
     member: null,
     searchPhone: '',
     paymentMethod: 'cash', // 'cash' 或 'balance'
-    expectedPoints: 0
+    expectedPoints: 0,
+    scrollHeight: 0  // scroll-view 高度，由 JS 动态计算
   },
 
   async onLoad() {
+    // 底部结算栏高度 140rpx，转换为 px（rpx 基准：screenWidth / 750）
+    const { windowHeight, screenWidth } = wx.getSystemInfoSync();
+    const footerPx = Math.ceil(140 * screenWidth / 750);
+    this.setData({ scrollHeight: windowHeight - footerPx });
+
     const order = getApp().globalData.currentOrder;
     const settings = await db.getSettings();
     
@@ -93,9 +99,15 @@ Page({
     if (usePoints && member) {
       const availablePoints = member.points || 0;
       const ratio = settings.pointsRedemptionRatio || 100;
-      const maxDiscount = (availablePoints / ratio).toFixed(2);
-      discountAmount = Math.min(parseFloat(maxDiscount), parseFloat(order.totalAmount));
-      pointsToUse = Math.floor(discountAmount * ratio);
+      // 先计算最多可抵扣的积分（根据订单金额限制）
+      const maxDiscountByAmount = parseFloat(order.totalAmount);
+      const maxDiscountByPoints = availablePoints / ratio;
+      // 取较小值作为实际抵扣金额
+      discountAmount = Math.min(maxDiscountByAmount, maxDiscountByPoints);
+      // 根据实际抵扣金额计算使用的积分（确保积分和金额完全对应）
+      pointsToUse = Math.round(discountAmount * ratio);
+      // 重新校准抵扣金额，确保与积分严格一致
+      discountAmount = pointsToUse / ratio;
     }
 
     this.setData({

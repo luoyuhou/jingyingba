@@ -22,7 +22,7 @@
     return (price * qty).toFixed(2);
   }
 </wxs>
-<scroll-view class="scrollarea" scroll-y type="list">
+<scroll-view class="scrollarea" scroll-y>
   <view class="container">
     <!-- 会员搜索/信息 -->
     <view class="section">
@@ -69,6 +69,10 @@
         <view class="points-gain">预计可得积分: +{{expectedPoints}}</view>
         <view class="total-amount">合计: <text class="p">￥{{priceUtils.toFixed(order.totalAmount)}}</text></view>
       </view>
+      <view class="total-row discount-row" wx:if="{{usePoints}}">
+        <view class="points-gain">积分抵扣 ({{pointsToUse}} 积分)</view>
+        <view class="total-amount">-￥{{priceUtils.toFixed(discountAmount)}}</view>
+      </view>
     </view>
 
     <!-- 优惠抵扣 -->
@@ -103,13 +107,16 @@
       </view>
     </view>
 
-    <!-- 底部结算 -->
-    <view class="footer-bar">
-      <view class="final-info">
-        <text class="label">实付金额</text>
-        <text class="amount">￥{{priceUtils.toFixed(payableAmount)}}</text>
-      </view>
-      <button class="confirm-btn" type="primary" bindtap="confirmPayment">确认支付</button>
-    </view>
+    <!-- 底部占位，防止最后一个 section 被 footer-bar 遮挡 -->
+    <view style="height: 30rpx;"></view>
   </view>
 </scroll-view>
+
+<!-- 底部结算栏，位于 scroll-view 之外 -->
+<view class="footer-bar">
+  <view class="final-info">
+    <text class="label">实付金额</text>
+    <text class="amount">￥{{priceUtils.toFixed(payableAmount)}}</text>
+  </view>
+  <button class="confirm-btn" type="primary" bindtap="confirmPayment">确认支付</button>
+</view>

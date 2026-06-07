@@ -15,6 +15,13 @@ Page({
     showSuspendedList: false,
     showOrderHistory: false,
     historyOrders: [],
+    historyPage: 1,
+    historyPageSize: 5,
+    historyHasMore: true,
+    historyLoading: false,
+    todayOrderCount: 0,
+    showOrderDetailModal: false,
+    selectedOrder: null,
     suspendedOrdersCount: 0,
     suspendedOrders: [],
     showWeightModal: false,
@@ -268,26 +275,92 @@ Page({
     const show = !this.data.showOrderHistory;
     this.setData({ showOrderHistory: show });
     if (show) {
-      wx.showLoading({ title: '加载中' });
-      try {
-        const historyOrders = await db._request(`/store/cashier/orders/today/${this.data.storeId}`, 'GET');
-
-        
-        // 后端已经返回了处理好的格式（memberName, memberPhone, items, billingMode 等）
-        // 我们只需要对时间进行简单的格式化显示即可
-        const processedOrders = (historyOrders || []).map(o => ({
-          ...o,
-          createdAt: util.formatTime(new Date(o.createdAt))
-        }));
-
-        this.setData({ historyOrders: processedOrders });
-      } catch (err) {
-        console.error('获取历史订单失败:', err);
-        wx.showToast({ title: '获取历史记录失败', icon: 'none' });
-      } finally {
-        wx.hideLoading();
-      }
+      // 重置分页状态
+      this.setData({
+        historyOrders: [],
+        historyPage: 1,
+        historyHasMore: true,
+        todayOrderCount: 0
+      });
+      // 加载订单数据和总数
+      await Promise.all([
+        this.loadHistoryOrders(),
+        this.loadTodayOrderCount()
+      ]);
     }
+  },
+
+  async loadTodayOrderCount() {
+    try {
+      const storeId = this.data.storeId;
+      const count = await db._request(`/store/cashier/orders/today/${storeId}/count`, 'GET');
+      this.setData({ todayOrderCount: count || 0 });
+    } catch (err) {
+      console.error('获取今日订单数失败:', err);
+    }
+  },
+
+  async loadHistoryOrders() {
+    const { historyPage, historyPageSize, historyLoading, historyHasMore, storeId } = this.data;
+    
+    if (historyLoading || !historyHasMore) return;
+    
+    this.setData({ historyLoading: true });
+    wx.showLoading({ title: '加载中' });
+    
+    try {
+      const historyOrders = await db._request(
+        `/store/cashier/orders/today/${storeId}?page=${historyPage}&pageSize=${historyPageSize}`, 
+        'GET'
+      );
+      
+      // 后端已经返回了处理好的格式（memberName, memberPhone, items, billingMode 等）
+      // 我们只需要对时间进行简单的格式化显示即可
+      const processedOrders = (historyOrders || []).map(o => ({
+        ...o,
+        createdAt: util.formatTime(new Date(o.createdAt))
+      }));
+      
+      // 判断是否还有更多数据
+      const hasMore = processedOrders.length === historyPageSize;
+      
+      this.setData({
+        historyOrders: [...this.data.historyOrders, ...processedOrders],
+        historyPage: historyPage + 1,
+        historyHasMore: hasMore,
+        historyLoading: false
+      });
+    } catch (err) {
+      console.error('获取历史订单失败:', err);
+      wx.showToast({ title: '获取历史记录失败', icon: 'none' });
+      this.setData({ historyLoading: false });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  // 滚动到底部加载更多
+  onHistoryScrollToLower() {
+    if (this.data.historyHasMore && !this.data.historyLoading) {
+      this.loadHistoryOrders();
+    }
+  },
+
+  // 显示订单详情
+  showOrderDetail(e) {
+    const { order } = e.currentTarget.dataset;
+    this.setData({
+      showOrderDetailModal: true,
+      selectedOrder: order
+    });
+  },
+
+  // 关闭订单详情
+  closeOrderDetail() {
+    this.setData({
+      showOrderDetailModal: false,
+      selectedOrder: null
+    });
   },
 
 

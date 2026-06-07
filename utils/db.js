@@ -4,7 +4,9 @@
  */
 
 const util = require('./util');
-const BASE_URL = 'http://127.0.0.1:3000/api'; // 后端 API 地址
+const config = require('../config');
+const BASE_URL = config.BASE_URL; // 从配置文件获取后端 API 地址
+
 
 const STORAGE_KEY_PREFIX = 'catering_';
 

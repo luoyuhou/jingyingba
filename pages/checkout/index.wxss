@@ -1,17 +1,26 @@
+page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f8f8f8;
+}
+
+.scrollarea {
+  flex: 1;
+  height: 0; /* 必须设置，配合 flex:1 触发 scroll-view 的内部滚动 */
+}
+
 .container {
   padding: 20rpx;
-  background: #f8f8f8;
-  min-height: 100vh;
-  padding-bottom: 180rpx;
-  display: block;
 }
 
 .section {
   background: #fff;
   border-radius: 20rpx;
-  padding: 5rpx;
+  padding: 24rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.02);
+  min-width: 95%;
 }
 
 .section-title {
@@ -162,6 +171,17 @@
   color: #333;
 }
 
+.discount-row {
+  margin-top: 10rpx;
+  padding-top: 0;
+  border-top: none;
+}
+
+.discount-row .total-amount {
+  color: #ff4400;
+  font-weight: bold;
+}
+
 /* 积分抵扣 */
 .pd-header {
   display: flex;
@@ -245,19 +265,16 @@
   background: #f9f9f9;
 }
 
-/* 底部结算栏 */
+/* 底部结算栏 - 不再使用 position: fixed，而是作为 flex 容器的最后一个子元素 */
 .footer-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 140rpx;
+  flex-shrink: 0;
+  height: calc(140rpx + env(safe-area-inset-bottom));
   background: #fff;
   display: flex;
-  align-items: center;
-  padding: 0 40rpx;
+  align-items: flex-start;
+  padding: 20rpx 40rpx 0;
   box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.05);
-  z-index: 100;
+  box-sizing: border-box;
 }
 
 .final-info {

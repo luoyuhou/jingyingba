@@ -3,7 +3,11 @@ const util = require('../../../utils/util');
 
 Page({
   data: {
-    orders: []
+    orders: [],
+    page: 1,
+    pageSize: 10,
+    hasMore: true,
+    loading: false
   },
 
   async onLoad(options) {
@@ -11,23 +15,47 @@ Page({
   },
 
   async loadData() {
+    const { page, pageSize, loading, hasMore } = this.data;
+
+    if (loading || !hasMore) return;
+
+    this.setData({ loading: true });
     wx.showLoading({ title: '加载中' });
+
     try {
       const storeId = db.getStoreId();
-      const orders = await db._request(`/store/cashier/orders/today/${storeId}`, 'GET');
+      const orders = await db._request(
+        `/store/cashier/orders/today/${storeId}?page=${page}&pageSize=${pageSize}`,
+        'GET'
+      );
 
-      
       const processedOrders = (orders || []).map(o => ({
         ...o,
         createdAt: util.formatTime(new Date(o.createdAt))
       }));
 
-      this.setData({ orders: processedOrders });
+      // 判断是否还有更多数据
+      const newHasMore = processedOrders.length === pageSize;
+
+      this.setData({
+        orders: [...this.data.orders, ...processedOrders],
+        page: page + 1,
+        hasMore: newHasMore,
+        loading: false
+      });
     } catch (err) {
       console.error('加载订单列表失败:', err);
       wx.showToast({ title: '加载失败', icon: 'none' });
+      this.setData({ loading: false });
     } finally {
       wx.hideLoading();
+    }
+  },
+
+  // 滚动到底部加载更多
+  onScrollToLower() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.loadData();
     }
   },
 

@@ -126,7 +126,7 @@
               <view class="mini-td {{item.typeLabel === '充值' ? 'highlight' : ''}}">{{item.amountDisplay}}</view>
               <view class="mini-td date" style="flex: 1.4;">{{item.time}}</view>
               <view class="mini-td" style="flex: 0.8; font-size: 24rpx; color: #999;">
-                {{item.typeLabel === '充值' ? '实收' + item.amount : (item.paymentMethod === 'balance' ? '余额支付' : '现场支付')}}
+                {{item.typeLabel === '充值' ? '实收' + item.amount : (item.paymentMethod === 'balance' ? '余额支付' : '现金支付')}}
               </view>
             </view>
             <view class="empty-mini" wx:if="{{memberRecords.length === 0}}">暂无交易记录</view>

@@ -40,7 +40,7 @@
   border: 1rpx solid #ffe58f;
 }
 
-/* 状态 1: 申请已接收 - 青色 */
+/* 状态 1: 已受理 - 青色 */
 .status-1 {
   color: #13c2c2;
   background-color: #e6fffb;

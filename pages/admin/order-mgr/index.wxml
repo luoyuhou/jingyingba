@@ -23,7 +23,7 @@
   }
 </wxs>
 <view class="container" style="padding: 1rpx 0">
-  <scroll-view class="order-list" scroll-y>
+  <scroll-view class="order-list" scroll-y bindscrolltolower="onScrollToLower" lower-threshold="50">
     <view class="order-item" wx:for="{{orders}}" wx:key="id">
       <view class="header">
         <view class="left">
@@ -40,18 +40,39 @@
             <text class="p-subtotal">￥{{priceUtils.getSubtotal(prod)}}</text>
           </view>
         </view>
-        <view class="summary">
-          <text class="payment-method">
-            {{item.paymentMethod === 'balance' ? '余额支付' : '现场支付'}}
-          </text>
-          <view class="total">
-            合计: <text class="price">￥{{priceUtils.toFixed(item.payableAmount || item.totalAmount)}}</text>
+        <view class="summary-details" style="padding: 10rpx 0; border-bottom: 1rpx dashed #eee; margin-bottom: 10rpx;">
+          <view style="display: flex; justify-content: space-between; font-size: 24rpx; color: #333; margin-bottom: 6rpx;">
+            <text>应收合计</text>
+            <text>￥{{priceUtils.toFixed(item.totalAmount)}}</text>
+          </view>
+          <view wx:if="{{item.discountAmount > 0}}" style="display: flex; justify-content: space-between; font-size: 24rpx; color: #ff4400;">
+            <text>积分抵扣 ({{item.pointsUsed || 0}} 积分)</text>
+            <text>-￥{{priceUtils.toFixed(item.discountAmount)}}</text>
           </view>
         </view>
+
+
+        <view class="summary">
+          <view style="display: flex; align-items: center;">
+            <text class="payment-method">{{item.paymentMethod === 'balance' ? '余额支付' : '现金支付'}}</text>
+            <text class="earn-points" wx:if="{{item.earnPoints > 0 || item.earn_points > 0}}" style="font-size: 22rpx; color: #07c160; margin-left: 10rpx;">+{{item.earnPoints || item.earn_points}} 积分</text>
+          </view>
+          <view class="total">
+            实收: <text class="price">￥{{priceUtils.toFixed(item.payableAmount)}}</text>
+          </view>
+        </view>
+
+
       </view>
       <view class="footer">
         <text class="time">{{item.createdAt}}</text>
       </view>
+    </view>
+    <!-- 加载状态提示 -->
+    <view class="load-more-tip" wx:if="{{orders.length > 0}}">
+      <text wx:if="{{loading}}">加载中...</text>
+      <text wx:elif="{{hasMore}}">上拉加载更多</text>
+      <text wx:else style="color: #999;">没有更多数据了</text>
     </view>
     <view class="empty" wx:if="{{orders.length === 0}}">暂无结算订单</view>
   </scroll-view>

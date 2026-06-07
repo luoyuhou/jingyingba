@@ -4,7 +4,7 @@
     <view class="card" wx:for="{{list}}" wx:key="id">
       <view class="card-header">
         <text class="store-name">{{item.store_name}}</text>
-        <text class="status-tag status-{{item.status}}">{{item.status === 0 ? '待处理' : (item.status === 1 ? '申请已接收' : (item.status === 2 ? '处理中' : (item.status === 3 ? '已通过' : '未知')))}}</text>
+        <text class="status-tag status-{{item.status}}">{{item.status === 0 ? '待处理' : (item.status === 1 ? '已受理' : (item.status === 2 ? '处理中' : (item.status === 3 ? '已通过' : '未知')))}}</text>
       </view>
       <view class="card-body">
         <view class="info-row">
