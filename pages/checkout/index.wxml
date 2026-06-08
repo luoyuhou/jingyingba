@@ -1,4 +1,3 @@
-<navigation-bar title="结算确认" back="{{true}}" color="black" background="#FFF"></navigation-bar>
 <wxs module="priceUtils">
   module.exports.toFixed = function(val) {
     if (!val) return '0.00';

@@ -1,4 +1,3 @@
-<navigation-bar title="分类管理" back="{{true}}" color="black" background="#FFF"></navigation-bar>
 <view class="mgr-container">
   <!-- 左侧分类列表 -->
   <scroll-view class="sidebar" scroll-y>

@@ -1,4 +1,3 @@
-<navigation-bar title="收银员管理" back="{{true}}" color="black" background="#FFF"></navigation-bar>
 <scroll-view class="scrollarea" scroll-y type="list">
   <!-- 顶部操作区 -->
   <view class="header-actions">

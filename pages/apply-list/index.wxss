@@ -1,15 +1,23 @@
 .container {
+  display: block;
   min-height: 100vh;
   background-color: #f8f8f8;
   padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.list {
+  width: 100%;
 }
 
 .card {
+  width: 100%;
   background-color: #fff;
   border-radius: 12rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+  box-sizing: border-box;
 }
 
 .card-header {

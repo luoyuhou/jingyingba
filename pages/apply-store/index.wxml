@@ -1,4 +1,3 @@
-<navigation-bar title="申请门店" back="{{true}}" color="black" background="#FFF"></navigation-bar>
 <view class="container">
   <form bindsubmit="onSubmit">
     <view class="section">

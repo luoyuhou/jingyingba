@@ -70,3 +70,64 @@
   font-size: 24rpx;
   color: #999;
 }
+
+/* 绑定手机号样式 */
+.bind-section {
+  width: 100%;
+  background: #fff;
+  padding: 40rpx;
+  border-radius: 20rpx;
+  box-sizing: border-box;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 40rpx;
+  text-align: center;
+}
+
+.input-group {
+  margin-bottom: 30rpx;
+  border-bottom: 1rpx solid #eee;
+  padding: 20rpx 0;
+}
+
+.input {
+  width: 100%;
+  height: 60rpx;
+  font-size: 30rpx;
+}
+
+.sms-group {
+  display: flex;
+  align-items: center;
+}
+
+.sms-btn {
+  font-size: 24rpx;
+  color: #07c160;
+  background: none;
+  padding: 0 20rpx;
+  border-left: 1rpx solid #eee;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.sms-btn.disabled {
+  color: #999;
+}
+
+.submit-btn {
+  background: #07c160;
+  color: #fff;
+  border-radius: 44rpx;
+  margin-top: 50rpx;
+}
+
+.back-btn {
+  text-align: center;
+  margin-top: 30rpx;
+  font-size: 26rpx;
+  color: #666;
+}

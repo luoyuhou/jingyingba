@@ -4,7 +4,7 @@
     <text class="title">经营吧收银系统</text>
   </view>
   
-  <view class="login-section">
+  <view class="login-section" wx:if="{{!showBindPhone}}">
     <view class="user-preview" wx:if="{{hasUserInfo}}">
       <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
       <text class="nickname">{{userInfo.nickName}}</text>
@@ -20,4 +20,21 @@
     
     <view class="tips">请使用门店管理员账号登录</view>
   </view>
+
+  <!-- 手机号绑定/验证部分 -->
+  <view class="bind-section" wx:else>
+    <view class="section-title">验证手机号</view>
+    <view class="input-group">
+      <input class="input" type="number" placeholder="请输入手机号" bindinput="onInputPhone" value="{{phone}}" maxlength="11" />
+    </view>
+    <view class="input-group sms-group">
+      <input class="input" type="number" placeholder="请输入验证码" bindinput="onInputSmsCode" value="{{smsCode}}" maxlength="6" />
+      <button class="sms-btn {{countdown > 0 ? 'disabled' : ''}}" bindtap="getSmsCode">
+        {{countdown > 0 ? countdown + 's' : '获取验证码'}}
+      </button>
+    </view>
+    <button class="submit-btn" bindtap="onBindPhone">确认绑定</button>
+    <view class="back-btn" bindtap="toggleBindPhone">返回微信登录</view>
+  </view>
+
 </view>

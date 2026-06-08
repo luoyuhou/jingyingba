@@ -1,8 +1,15 @@
-<navigation-bar title="选择门店" back="{{false}}" color="black" background="#FFF"></navigation-bar>
 <view class="container">
   <view class="header">
-    <text class="title">请选择要进入的门店</text>
-    <text class="subtitle">当前账号关联的所有门店</text>
+    <view class="header-content">
+      <view class="title-area">
+        <text class="title">请选择要进入的门店</text>
+        <text class="subtitle">当前账号关联的所有门店</text>
+      </view>
+      <view class="scan-btn" bindtap="onScanLogin">
+        <image class="scan-icon" src="/static/img/scan-code.png" mode="aspectFit"></image>
+        <text class="scan-text">登录PC端</text>
+      </view>
+    </view>
   </view>
 
   <view class="list-wrapper">

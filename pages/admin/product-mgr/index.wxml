@@ -1,4 +1,3 @@
-<navigation-bar title="商品与分类管理" back="{{true}}" color="black" background="#FFF"></navigation-bar>
 <view class="mgr-container">
   <!-- 顶部搜索与统计 -->
   <view class="header-tools">

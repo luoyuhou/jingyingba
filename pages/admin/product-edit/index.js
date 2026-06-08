@@ -11,10 +11,12 @@ Page({
   },
 
   async onLoad(options) {
+    wx.setNavigationBarTitle({ title: options.id ? '编辑商品' : '添加商品' });
     const categories = await db.list(TABLES.CATEGORIES);
     this.setData({ categories });
 
     if (options.id) {
+      wx.setNavigationBarTitle({ title: '编辑商品' });
       const product = await db.get(TABLES.PRODUCTS, options.id);
       if (product) {
         this.setData({
