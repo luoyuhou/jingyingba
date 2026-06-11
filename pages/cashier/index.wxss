@@ -102,6 +102,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 20rpx;
+  margin-bottom: 50rpx;
 }
 
 .product-item {

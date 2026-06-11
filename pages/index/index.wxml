@@ -21,7 +21,9 @@
         bindtap="selectStore" 
         data-id="{{item.store_id}}"
         data-name="{{item.store_name}}"
+        data-role="{{item.role}}"
       >
+
         <view class="store-info">
           <text class="store-name">{{item.store_name}}</text>
           <text class="store-address">{{item.province_name}}{{item.city_name}}{{item.area_name}}{{item.address}}</text>

@@ -28,18 +28,24 @@ Page({
     tempProduct: null,
     inputWeight: '',
     searchPhone: '',
-    member: null
+    member: null,
+    role: ''
   },
 
   onLoad(options) {
     if (options.sid) {
       this.setData({ storeId: options.sid });
-      db.setStoreId(options.sid);
+      db.setStoreId(options.sid, options.role || '');
     } else {
       const sid = db.getStoreId();
       this.setData({ storeId: sid });
     }
+    
+    // 初始化角色
+    this.setData({ role: options.role || db.getRole() });
   },
+
+
 
   resetCart() {
     this.setData({

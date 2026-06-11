@@ -57,7 +57,7 @@ Page({
       
       // 仅在初次进入且只有一个门店时自动跳转
       if (autoSelect && stores.length === 1) {
-        this.doSelect(stores[0].store_id, stores[0].store_name);
+        this.doSelect(stores[0].store_id, stores[0].store_name, stores[0].role);
       }
     } catch (err) {
       this.setData({ loading: false });
@@ -66,19 +66,21 @@ Page({
   },
 
   selectStore(e) {
-    const { id, name } = e.currentTarget.dataset;
-    this.doSelect(id, name);
+    const { id, name, role } = e.currentTarget.dataset;
+    this.doSelect(id, name, role);
   },
 
-  doSelect(id, name) {
-    db.setStoreId(id);
+  doSelect(id, name, role) {
+    db.setStoreId(id, role);
     wx.setStorageSync('store_name', name);
+
     wx.showToast({ title: '已进入' + name, icon: 'none' });
     
     setTimeout(() => {
-      wx.navigateTo({ url: `/pages/cashier/index?sid=${id}` });
+      wx.navigateTo({ url: `/pages/cashier/index?sid=${id}&role=${role}` });
     }, 1000);
   },
+
 
   navToApply() {
     wx.navigateTo({ url: '/pages/apply-store/index' });

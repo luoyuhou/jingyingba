@@ -23,11 +23,16 @@ const TABLES = {
 class DB {
   constructor() {
     this.storeId = wx.getStorageSync(STORAGE_KEY_PREFIX + 'store_id') || '';
+    this.role = wx.getStorageSync(STORAGE_KEY_PREFIX + 'role') || '';
   }
 
-  setStoreId(id) {
+  setStoreId(id, role = '') {
     this.storeId = id;
     wx.setStorageSync(STORAGE_KEY_PREFIX + 'store_id', id);
+    if (role) {
+      this.role = role;
+      wx.setStorageSync(STORAGE_KEY_PREFIX + 'role', role);
+    }
   }
 
   getStoreId() {
@@ -35,6 +40,13 @@ class DB {
     this.storeId = wx.getStorageSync(STORAGE_KEY_PREFIX + 'store_id') || '';
     return this.storeId;
   }
+
+  getRole() {
+    if (this.role) return this.role;
+    this.role = wx.getStorageSync(STORAGE_KEY_PREFIX + 'role') || '';
+    return this.role;
+  }
+
 
   async _request(url, method = 'GET', data = {}) {
     return new Promise((resolve, reject) => {
@@ -77,7 +89,6 @@ class DB {
                 const key = pair[0].trim();
                 const val = pair[1].trim();
                 wx.setStorageSync(key, val);
-                console.log(`[DB Cookie Saved] ${key}=${val}`);
               }
             });
           }
@@ -166,11 +177,19 @@ class DB {
           timestamp: r.create_date
         }));
 
-
+      case TABLES.CASHIERS:
+        const cashiers = await this._request(`/store/staff/list?storeId=${this.storeId}`);
+        return (cashiers || []).map(c => ({
+          ...c,
+          id: c.staff_id,
+          username: c.phone, // 账号映射到手机号
+          status: c.status === 1 ? 'active' : 'disabled'
+        }));
       
       default:
         return [];
     }
+
 
   }
 
@@ -290,7 +309,18 @@ class DB {
         store_id: this.storeId
       });
     }
+
+    if (table === TABLES.CASHIERS) {
+      return await this._request('/store/staff', 'POST', {
+        name: data.name,
+        phone: data.username, // 账号映射到手机号
+        status: data.status === 'active' ? 1 : 0,
+        store_id: this.storeId
+      });
+    }
+
   }
+
 
   /**
    * 更新数据
@@ -315,6 +345,13 @@ class DB {
     if (table === TABLES.MEMBERS) {
       return await this._request(`/store/member/${id}`, 'PATCH', data);
     }
+
+    if (table === TABLES.CASHIERS) {
+      const payload = { ...data };
+      if (data.status) payload.status = data.status === 'active' ? 1 : 0;
+      if (data.username) payload.phone = data.username;
+      return await this._request(`/store/staff/${id}`, 'PATCH', payload);
+    }
   }
 
   /**
@@ -324,6 +361,11 @@ class DB {
     if (table === TABLES.MEMBERS) {
       return await this._request(`/store/member/${id}`, 'DELETE');
     }
+
+    if (table === TABLES.CASHIERS) {
+      return await this._request(`/store/staff/${id}`, 'DELETE');
+    }
+
 
     if (table === TABLES.ORDERS) {
 

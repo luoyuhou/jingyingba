@@ -24,7 +24,6 @@
             <text class="status-tag {{item.status === 'disabled' ? 'disabled' : 'active'}}">{{item.status === 'disabled' ? '已禁用' : '正常'}}</text>
           </view>
           <view class="td action">
-            <text class="btn-op edit" bindtap="openEdit" data-cashier="{{item}}">改密</text>
             <text class="btn-op toggle {{item.status === 'disabled' ? 'enable' : 'disable'}}" bindtap="toggleStatus" data-id="{{item.id}}" data-status="{{item.status}}">{{item.status === 'disabled' ? '启用' : '禁用'}}</text>
             <text class="btn-op delete" bindtap="deleteCashier" data-id="{{item.id}}">删除</text>
           </view>
@@ -39,8 +38,7 @@
     <view class="modal-content">
       <text class="modal-title">添加收银员</text>
       <input class="input" placeholder="输入姓名" bindinput="onInput" data-field="newName" value="{{newName}}" />
-      <input class="input" placeholder="输入登录账号" bindinput="onInput" data-field="newUsername" value="{{newUsername}}" />
-      <input class="input" password placeholder="输入登录密码" bindinput="onInput" data-field="newPassword" value="{{newPassword}}" />
+      <input class="input" placeholder="输入登录手机号" bindinput="onInput" data-field="newUsername" value="{{newUsername}}" />
       <view class="modal-btns">
         <button class="btn-cancel" bindtap="toggleAdd">取消</button>
         <button class="btn-confirm" type="primary" bindtap="addCashier">保存</button>
@@ -48,15 +46,4 @@
     </view>
   </view>
 
-  <!-- 修改密码弹窗 -->
-  <view class="modal" wx:if="{{showEdit}}">
-    <view class="modal-content">
-      <text class="modal-title">修改密码 - {{currentCashier.name}}</text>
-      <input class="input" password placeholder="输入新密码" bindinput="onInput" data-field="editPassword" value="{{editPassword}}" />
-      <view class="modal-btns">
-        <button class="btn-cancel" bindtap="closeEdit">取消</button>
-        <button class="btn-confirm" type="primary" bindtap="updatePassword">确认修改</button>
-      </view>
-    </view>
-  </view>
 </scroll-view>

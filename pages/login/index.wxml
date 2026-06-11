@@ -17,8 +17,6 @@
     <button wx:else class="login-btn" bindtap="onLogin">
       进入系统
     </button>
-    
-    <view class="tips">请使用门店管理员账号登录</view>
   </view>
 
   <!-- 手机号绑定/验证部分 -->

@@ -4,13 +4,11 @@ Page({
   data: {
     cashiers: [],
     showAdd: false,
-    showEdit: false,
     currentCashier: null,
     newName: '',
-    newUsername: '',
-    newPassword: '',
-    editPassword: ''
+    newUsername: ''
   },
+
 
   onShow() {
     this.loadData();
@@ -25,22 +23,8 @@ Page({
     this.setData({ 
       showAdd: !this.data.showAdd, 
       newName: '', 
-      newUsername: '',
-      newPassword: ''
+      newUsername: ''
     });
-  },
-
-  openEdit(e) {
-    const { cashier } = e.currentTarget.dataset;
-    this.setData({
-      showEdit: true,
-      currentCashier: cashier,
-      editPassword: ''
-    });
-  },
-
-  closeEdit() {
-    this.setData({ showEdit: false, currentCashier: null, editPassword: '' });
   },
 
   onInput(e) {
@@ -49,8 +33,8 @@ Page({
   },
 
   async addCashier() {
-    const { newName, newUsername, newPassword } = this.data;
-    if (!newName || !newUsername || !newPassword) {
+    const { newName, newUsername } = this.data;
+    if (!newName || !newUsername) {
       wx.showToast({ title: '请填写完整信息', icon: 'none' });
       return;
     }
@@ -58,14 +42,13 @@ Page({
     // 检查用户名唯一性
     const cashiers = await db.list(TABLES.CASHIERS);
     if (cashiers.find(c => c.username === newUsername)) {
-      wx.showToast({ title: '用户名已存在', icon: 'none' });
+      wx.showToast({ title: '该手机号已存在', icon: 'none' });
       return;
     }
 
     await db.add(TABLES.CASHIERS, {
       name: newName,
       username: newUsername,
-      password: newPassword,
       status: 'active' // 默认启用
     });
 
@@ -74,23 +57,8 @@ Page({
     wx.showToast({ title: '添加成功' });
   },
 
-  async updatePassword() {
-    const { currentCashier, editPassword } = this.data;
-    if (!editPassword) {
-      wx.showToast({ title: '请输入新密码', icon: 'none' });
-      return;
-    }
-
-    await db.update(TABLES.CASHIERS, currentCashier.id, {
-      password: editPassword
-    });
-
-    wx.showToast({ title: '密码已修改' });
-    this.closeEdit();
-    this.loadData();
-  },
-
   async toggleStatus(e) {
+
     const { id, status } = e.currentTarget.dataset;
     const newStatus = status === 'active' ? 'disabled' : 'active';
     

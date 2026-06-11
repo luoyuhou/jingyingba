@@ -49,10 +49,11 @@
         <icon type="search" size="18" color="#666"></icon>
         <text>查订单</text>
       </view>
-      <view class="sidebar-btn" bindtap="navToAdmin" style="margin-top: 20rpx; border-top: 1rpx solid #eee; padding-top: 20rpx;">
+      <view class="sidebar-btn" bindtap="navToAdmin" wx:if="{{role === 'OWNER'}}" style="margin-top: 20rpx; border-top: 1rpx solid #eee; padding-top: 20rpx;">
         <icon type="info" size="18" color="#666"></icon>
         <text>进入后台</text>
       </view>
+
     </view>
 
 
